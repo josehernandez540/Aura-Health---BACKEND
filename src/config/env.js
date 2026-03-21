@@ -7,4 +7,6 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   isDev: process.env.NODE_ENV === "development",
   isProd: process.env.NODE_ENV === "production",
+  jwtSecret: process.env.JWT_SECRET,
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN,
 };
