@@ -5,7 +5,8 @@ import prisma, { connectDB } from '../src/config/database.js';
 
 
 let app;
-let token = null;
+let doctorToken = null;
+let adminToken = null;
 
 
 beforeAll(async () => {
@@ -34,6 +35,23 @@ beforeAll(async () => {
       role_id: role.id,
     },
   });
+
+  const adminRole = await prisma.roles.findFirst({
+    where: { name: 'ADMIN' },
+  });
+
+  await prisma.users.upsert({
+    where: { email: 'admin@aura.com' },
+    update: {
+      password: hashedPassword,
+      role_id: adminRole.id,
+    },
+    create: {
+      email: 'admin@aura.com',
+      password: hashedPassword,
+      role_id: adminRole.id,
+    },
+  });
 });
 
 
@@ -54,7 +72,7 @@ describe('Auth flow', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('should login successfully', async () => {
+  it('should login doctor successfully', async () => {
     const res = await request(app)
       .post('/api/v1/auth/login')
       .send({
@@ -65,7 +83,19 @@ describe('Auth flow', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.data.token).toBeDefined();
 
-    token = res.body.data.token;
+    doctorToken = res.body.data.token;
+  });
+
+  it('should login admin successfully', async () => {
+    const res = await request(app)
+      .post('/api/v1/auth/login')
+      .send({
+        email: 'admin@aura.com',
+        password: '123456',
+      });
+
+    expect(res.statusCode).toBe(200);
+    adminToken = res.body.data.token;
   });
 
 });
@@ -82,10 +112,18 @@ describe('Protected routes', () => {
   it('should allow access with valid token', async () => {
     const res = await request(app)
       .get('/api/v1/protected')
-      .set('Authorization', `Bearer ${token}`);
+      .set('Authorization', `Bearer ${doctorToken}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
+  });
+
+  it('should allow ADMIN access', async () => {
+    const res = await request(app)
+      .get('/api/v1/admin/info')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.statusCode).toBe(200);
   });
 
 });

@@ -22,7 +22,7 @@ class LoginUseCase {
 
     const token = this.jwtService.generateToken({
       userId: user.id,
-      role: user.role,
+      role: user.roles.name,
     });
 
     return {
@@ -30,7 +30,7 @@ class LoginUseCase {
       user: {
         id: user.id,
         email: user.email,
-        role: user.role,
+        role: user.roles.name,
       },
     };
   }
