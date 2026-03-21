@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRoute from "./auth.routes.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
+import adminRoute from "./admin.routes.js";
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.get("/v1/protected", authMiddleware, (req, res) => {
     user: req.user,
   });
 });
+router.use("/v1/admin", authMiddleware, adminRoute);
 
 export default router;
