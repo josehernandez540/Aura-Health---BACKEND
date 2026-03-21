@@ -5,6 +5,7 @@ import { logger } from './logger.js';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 const prisma = new PrismaClient({ adapter })
 
+
 export const connectDB = async () => {
     try {
         await prisma.$connect();
