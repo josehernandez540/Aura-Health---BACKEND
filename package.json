@@ -8,7 +8,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
   },
@@ -40,7 +40,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "jest": "^30.3.0",
     "morgan": "^1.10.1",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   }
 }
