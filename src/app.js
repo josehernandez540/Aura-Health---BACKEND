@@ -3,6 +3,7 @@ import helmet from "helmet";
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import routes from './presentation/routes/index.js';
 
 import { errorMiddleware } from './presentation/middlewares/error.middleware.js';
 import { env } from './config/env.js';
@@ -19,8 +20,7 @@ export const createApp = () => {
         app.use(morgan('dev'));
     }
 
-    // routes aquí
-    // app.use("/api", routes);
+    app.use("/api", routes);
 
     app.use(errorMiddleware);
 

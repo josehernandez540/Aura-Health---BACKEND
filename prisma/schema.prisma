@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -11,4 +5,224 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model appointment_history {
+  id             String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appointment_id String       @db.Uuid
+  action         String
+  performed_by   String?      @db.Uuid
+  created_at     DateTime?    @default(now()) @db.Timestamp(6)
+  appointments   appointments @relation(fields: [appointment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users          users?       @relation(fields: [performed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model appointments {
+  id                  String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  doctor_id           String                   @db.Uuid
+  patient_id          String                   @db.Uuid
+  date                DateTime                 @db.Date
+  start_time          DateTime                 @db.Time(6)
+  end_time            DateTime                 @db.Time(6)
+  status              appointment_status_enum? @default(SCHEDULED)
+  created_by          String?                  @db.Uuid
+  notes               String?
+  created_at          DateTime?                @default(now()) @db.Timestamp(6)
+  appointment_history appointment_history[]
+  users               users?                   @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  doctors             doctors                  @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patients            patients                 @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([doctor_id, date, start_time], map: "unique_doctor_schedule")
+  @@index([doctor_id, date], map: "idx_appointment_doctor_date")
+}
+
+model audit_logs {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id     String?   @db.Uuid
+  action      String
+  entity_type String?
+  entity_id   String?   @db.Uuid
+  metadata    Json?
+  severity    String?
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  users       users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model doctors {
+  id             String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id        String         @unique @db.Uuid
+  name           String
+  specialization String?
+  license_number String?        @unique
+  is_active      Boolean?       @default(true)
+  appointments   appointments[]
+  users          users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  treatments     treatments[]
+}
+
+model medical_records {
+  id                   String                      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  patient_id           String                      @db.Uuid
+  uploaded_by          String?                     @db.Uuid
+  file_url             String
+  file_hash            String?
+  source               medical_record_source_enum?
+  created_at           DateTime?                   @default(now()) @db.Timestamp(6)
+  patients             patients                    @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                users?                      @relation(fields: [uploaded_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  risk_classifications risk_classifications?
+
+  @@index([patient_id], map: "idx_medical_record_patient")
+}
+
+model medication_changes {
+  id                  String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  treatment_id        String     @db.Uuid
+  previous_medication String?
+  new_medication      String?
+  changed_by          String?    @db.Uuid
+  created_at          DateTime?  @default(now()) @db.Timestamp(6)
+  users               users?     @relation(fields: [changed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  treatments          treatments @relation(fields: [treatment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model notifications {
+  id          String                    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id     String                    @db.Uuid
+  type        notification_type_enum?
+  message     String?
+  status      notification_status_enum? @default(PENDING)
+  entity_type String?
+  entity_id   String?                   @db.Uuid
+  sent_at     DateTime?                 @db.Timestamp(6)
+  users       users                     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model patients {
+  id              String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name            String
+  document_number String            @unique
+  birth_date      DateTime?         @db.Date
+  phone           String?
+  email           String?
+  created_at      DateTime?         @default(now()) @db.Timestamp(6)
+  appointments    appointments[]
+  medical_records medical_records[]
+  treatments      treatments[]
+}
+
+model reports {
+  id           String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  generated_by String?           @db.Uuid
+  type         report_type_enum?
+  file_url     String?
+  entity_type  String?
+  entity_id    String?           @db.Uuid
+  created_at   DateTime?         @default(now()) @db.Timestamp(6)
+  users        users?            @relation(fields: [generated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model risk_classifications {
+  id                String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  medical_record_id String           @unique @db.Uuid
+  risk_level        risk_level_enum?
+  score             Decimal?         @db.Decimal
+  created_at        DateTime?        @default(now()) @db.Timestamp(6)
+  medical_records   medical_records  @relation(fields: [medical_record_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model roles {
+  id    String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name  user_role_enum @unique
+  users users[]
+}
+
+model treatment_approvals {
+  id           String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  treatment_id String     @db.Uuid
+  approved_by  String?    @db.Uuid
+  notes        String?
+  approved_at  DateTime?  @default(now()) @db.Timestamp(6)
+  users        users?     @relation(fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  treatments   treatments @relation(fields: [treatment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model treatments {
+  id                  String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  patient_id          String                 @db.Uuid
+  doctor_id           String                 @db.Uuid
+  description         String
+  status              treatment_status_enum? @default(ACTIVE)
+  created_at          DateTime?              @default(now()) @db.Timestamp(6)
+  medication_changes  medication_changes[]
+  treatment_approvals treatment_approvals[]
+  doctors             doctors                @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patients            patients               @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([patient_id], map: "idx_treatment_patient")
+}
+
+model users {
+  id                  String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email               String                @unique
+  password            String
+  role_id             String                @db.Uuid
+  is_active           Boolean?              @default(true)
+  created_at          DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?             @default(now()) @db.Timestamp(6)
+  appointment_history appointment_history[]
+  appointments        appointments[]
+  audit_logs          audit_logs[]
+  doctors             doctors?
+  medical_records     medical_records[]
+  medication_changes  medication_changes[]
+  notifications       notifications[]
+  reports             reports[]
+  treatment_approvals treatment_approvals[]
+  roles               roles                 @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum appointment_status_enum {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum medical_record_source_enum {
+  INTERNAL
+  EXTERNAL
+}
+
+enum notification_status_enum {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum notification_type_enum {
+  APPOINTMENT_REMINDER
+  DAILY_AGENDA
+}
+
+enum report_type_enum {
+  CLINICAL
+}
+
+enum risk_level_enum {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum treatment_status_enum {
+  ACTIVE
+  COMPLETED
+  PENDING_APPROVAL
+}
+
+enum user_role_enum {
+  ADMIN
+  DOCTOR
 }

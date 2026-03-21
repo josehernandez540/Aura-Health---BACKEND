@@ -1,10 +1,11 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import { createApp } from './app.js';
 import { connectDB } from './config/database.js';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 
 const startServer = async () => {
+    dotenv.config();
     await connectDB();
 
     const app = createApp();
