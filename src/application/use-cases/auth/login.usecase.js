@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
 import { AuthenticationError } from '../../../shared/errors/errors.js';
-import { AuditActions } from '../../../domain/constants/audit-actions.js';
 
 class LoginUseCase {
   constructor(userRepository, jwtService) {
@@ -15,6 +14,10 @@ class LoginUseCase {
 
     if (!user) {
       throw new AuthenticationError('Credenciales inválidas');
+    }
+
+    if (user.is_active === false) {
+      throw new AuthenticationError('Usuario inactivo. Contacte al administrador');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
