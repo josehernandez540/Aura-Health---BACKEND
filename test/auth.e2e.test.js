@@ -2,7 +2,7 @@ import request from 'supertest';
 import { createApp } from '../src/app.js';
 import bcrypt from 'bcryptjs';
 import prisma, { connectDB } from '../src/config/database.js';
-
+import { AuditActions } from '../src/domain/constants/audit-actions.js';
 
 let app;
 let doctorToken = null;
@@ -72,7 +72,7 @@ describe('Auth flow', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('should login doctor successfully', async () => {
+  it('should login doctor successfully and create audit log', async () => {
     const res = await request(app)
       .post('/api/v1/auth/login')
       .send({
@@ -84,6 +84,20 @@ describe('Auth flow', () => {
     expect(res.body.data.token).toBeDefined();
 
     doctorToken = res.body.data.token;
+    
+    const user = await prisma.users.findUnique({
+      where: { email: 'doctor@aura.com' }
+    });
+
+    const auditLog = await prisma.audit_logs.findFirst({
+      where: {
+        action: AuditActions.USER_LOGIN,
+        user_id: user.id
+      }
+    });
+
+    expect(auditLog).toBeTruthy();
+    expect(auditLog.action).toBe(AuditActions.USER_LOGIN);
   });
 
   it('should login admin successfully', async () => {

@@ -2,9 +2,31 @@ import PrismaUserRepository from '../../infrastructure/repositories/user.reposit
 import LoginUseCase from '../../application/use-cases/auth/login.usecase.js';
 import jwtService from '../../infrastructure/security/jwt.service.js';
 import { successResponse } from '../../shared/utils/apiResponse.js';
+import { withAudit } from '../../shared/utils/audit-wrapper.js';
+import { AuditActions } from '../../domain/constants/audit-actions.js';
+import AuditService from '../../application/services/audit.service.js';
+import AuditRepository from '../../infrastructure/repositories/audit.repository.js';
 
 const userRepository = new PrismaUserRepository();
-const loginUseCase = new LoginUseCase(userRepository, jwtService);
+const auditRepository = new AuditRepository();
+const auditService = new AuditService(auditRepository);
+
+const loginUseCaseRaw = new LoginUseCase(userRepository, jwtService);
+
+const loginUseCase = {
+  execute: withAudit(
+    loginUseCaseRaw.execute.bind(loginUseCaseRaw),
+    auditService,
+    {
+      action: AuditActions.USER_LOGIN,
+      entityType: 'USER',
+
+      getUserId: (result, params, context) => context.user?.id,
+      getEntityId: (result, params, context) => context.user?.id,
+      getMetadata: (params) => ({ email: params.email })
+    }
+  )
+};
 
 class AuthController {
   async login(req, res, next) {
