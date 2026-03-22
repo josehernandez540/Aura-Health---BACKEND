@@ -29,6 +29,28 @@ class PrismaDoctorRepository extends DoctorRepository {
     ]);
     return { items, total, page, limit };
   }
+
+  async updateStatus(doctorId, status, performedBy) {
+    const isActive = status === 'ACTIVE';
+
+    return prisma.$transaction(async (tx) => {
+      const doctor = await tx.doctors.update({
+        where: { id: doctorId },
+        data: {
+          is_active: isActive,
+          status_changed_by: performedBy,
+          status_changed_at: new Date(),
+        },
+      });
+
+      await tx.users.update({
+        where: { id: doctor.user_id },
+        data: { is_active: isActive },
+      });
+
+      return doctor;
+    });
+  }
 }
 
 export default PrismaDoctorRepository;

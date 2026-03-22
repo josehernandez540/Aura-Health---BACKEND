@@ -50,15 +50,18 @@ model audit_logs {
 }
 
 model doctors {
-  id             String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id        String         @unique @db.Uuid
-  name           String
-  specialization String?
-  license_number String?        @unique
-  is_active      Boolean?       @default(true)
-  appointments   appointments[]
-  users          users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  treatments     treatments[]
+  id                String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id           String         @unique @db.Uuid
+  name              String
+  specialization    String?
+  license_number    String?        @unique
+  is_active         Boolean?       @default(true)
+  status_changed_by String?        @db.Uuid
+  status_changed_at DateTime?      @db.Timestamp(6)
+  appointments      appointments[]
+  users             users          @relation("DoctorUser", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  status_changed_user   users?         @relation("DoctorStatusChanger", fields: [status_changed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  treatments        treatments[]
 }
 
 model medical_records {
@@ -174,7 +177,8 @@ model users {
   appointment_history appointment_history[]
   appointments        appointments[]
   audit_logs          audit_logs[]
-  doctors             doctors?
+  doctors             doctors?              @relation("DoctorUser")
+  doctors_changed     doctors[]             @relation("DoctorStatusChanger")
   medical_records     medical_records[]
   medication_changes  medication_changes[]
   notifications       notifications[]

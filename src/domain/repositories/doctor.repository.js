@@ -10,6 +10,10 @@ class DoctorRepository {
   async findAll(options = {}) {
     throw new Error('Method not implemented');
   }
+
+  async updateStatus(doctorId, status, performedBy) {
+    throw new Error('Method not implemented');
+  }
 }
 
 export default DoctorRepository;

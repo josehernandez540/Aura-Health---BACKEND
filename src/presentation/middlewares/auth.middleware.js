@@ -1,7 +1,8 @@
 import jwtService from '../../infrastructure/security/jwt.service.js';
 import { AuthenticationError } from '../../shared/errors/errors.js';
+import prisma from '../../config/database.js';
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -16,6 +17,15 @@ const authMiddleware = (req, res, next) => {
     }
 
     const decoded = jwtService.verifyToken(token);
+
+    const user = await prisma.users.findUnique({
+      where: { id: decoded.userId },
+      select: { is_active: true },
+    });
+
+    if (!user || user.is_active === false) {
+      throw new AuthenticationError('Usuario inactivo. Contacte al administrador');
+    }
 
     req.user = decoded;
 
