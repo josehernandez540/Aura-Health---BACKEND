@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    .container {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .header {
+      background-color: #2563eb;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+    .content {
+      padding: 32px;
+      color: #374151;
+      line-height: 1.6;
+    }
+    .credentials-box {
+      background-color: #f9fafb;
+      border: 1px solid #f3f4f6;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 24px 0;
+    }
+    .footer {
+      background-color: #f3f4f6;
+      color: #6b7280;
+      padding: 16px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .warning {
+      color: #b91c1c;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin:0;">Aura Health</h1>
+    </div>
+    <div class="content">
+      <h2>¡Bienvenido, {{name}}!</h2>
+      <p>Tu cuenta ha sido creada exitosamente en nuestro Sistema de Gestión Clínica. Aquí tienes tus credenciales de acceso:</p>
+      
+      <div class="credentials-box">
+        <p style="margin: 5px 0;"><strong>Usuario:</strong> {{email}}</p>
+        <p style="margin: 5px 0;"><strong>Contraseña Temporal:</strong> <code style="background:#e5e7eb; padding:2px 4px; border-radius:4px;">{{password}}</code></p>
+      </div>
+
+      <p class="warning">Por razones de seguridad, se te solicitará cambiar esta contraseña en tu primer inicio de sesión.</p>
+    </div>
+    <div class="footer">
+      &copy; 2026 Aura Health — Transformando la gestión médica.
+    </div>
+  </div>
+</body>
+</html>
