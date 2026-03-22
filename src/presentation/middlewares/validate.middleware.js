@@ -1,0 +1,20 @@
+import { ValidationError } from "../../shared/errors/errors.js";
+
+
+export function validate(schema) {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.body);
+
+    if (!result.success) {
+      const issues = result.error.issues ?? result.error.errors ?? [];
+      const message = issues
+        .map((e) => `${e.path.join('.')}: ${e.message}`)
+        .join('; ');
+
+      return next(new ValidationError(message));
+    }
+
+    req.body = result.data;
+    next();
+  };
+}
