@@ -1,7 +1,8 @@
 import prisma from '../../config/database.js';
+import UserRepository from '../../domain/repositories/user.repository.js';
 
 
-class PrismaUserRepository {
+class PrismaUserRepository extends UserRepository {
   async findByEmail(email) {
     return prisma.users.findUnique({
       where: { email },
@@ -13,6 +14,49 @@ class PrismaUserRepository {
     return prisma.users.findUnique({
       where: { id },
       include: { roles: true },
+    });
+  }
+
+  async createWithDoctor({
+    email,
+    password,
+    roleId,
+    name,
+    documentNumber,
+    specialization,
+    licenseNumber,
+    phone,
+  }) {
+    return prisma.$transaction(async (tx) => {
+      
+      const user = await tx.users.create({
+        data: {
+          email,
+          password,
+          role_id: roleId,
+        },
+      });
+ 
+      const doctor = await tx.doctors.create({
+        data: {
+          user_id: user.id,
+          name,
+          specialization: specialization ?? null,
+          license_number: licenseNumber ?? null,
+          is_active: true,
+        },
+      });
+ 
+      await tx.patients.create({
+        data: {
+          name,
+          document_number: documentNumber,
+          phone: phone ?? null,
+          email,
+        },
+      });
+ 
+      return { user, doctor };
     });
   }
 }
