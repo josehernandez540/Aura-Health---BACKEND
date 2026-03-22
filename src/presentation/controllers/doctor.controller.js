@@ -8,12 +8,14 @@ import PrismaUserRepository from "../../infrastructure/repositories/user.reposit
 import { successResponse } from "../../shared/utils/apiResponse.js";
 import { withAudit } from "../../shared/utils/audit-wrapper.js";
 import { AuditActions } from '../../domain/constants/audit-actions.js';
+import ToggleDoctorStatusUseCase from "../../application/use-cases/doctors/toggleDoctorStatus.usecase.js";
 
 const userRepository = new PrismaUserRepository();
 const doctorRepository = new PrismaDoctorRepository();
 const roleRepository = new PrismaRoleRepository();
 const auditRepository = new AuditRepository();
 const auditService = new AuditService(auditRepository);
+const toggleStatusRaw = new ToggleDoctorStatusUseCase(doctorRepository);
 
 const createDoctorUseCaseRaw = new CreateDoctorUseCase(
   userRepository,
@@ -40,11 +42,44 @@ const createDoctorUseCase = {
   ),
 };
 
+const toggleStatusUseCase = {
+  execute: withAudit(
+    toggleStatusRaw.execute.bind(toggleStatusRaw),
+    auditService,
+    {
+      action: AuditActions.DOCTOR_STATUS_CHANGED,
+      entityType: 'DOCTOR',
+      getUserId: (_result, _params, context) => context?.user?.userId,
+      getEntityId: (_result, params) => params.doctorId,
+      getMetadata: (params) => ({
+        newStatus: params.status,
+        performedBy: params.performedBy,
+      }),
+    }
+  ),
+};
+
 class DoctorController {
   async create(req, res, next) {
     try {
       const result = await createDoctorUseCase.execute(req.body);
       return successResponse(res, result, 'Médico creado exitosamente');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateStatus(req, res, next) {
+    try {
+      const { id: doctorId } = req.params;
+      const { status } = req.body;
+      const performedBy = req.user.userId;
+
+      const result = await toggleStatusUseCase.execute(
+        { doctorId, status, performedBy },
+      );
+
+      return successResponse(res, result, `Médico ${status === 'ACTIVE' ? 'activado' : 'inactivado'} correctamente`);
     } catch (error) {
       next(error);
     }
