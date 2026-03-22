@@ -4,9 +4,10 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import routes from './presentation/routes/index.js';
-
+import swaggerUi from 'swagger-ui-express';
 import { errorMiddleware } from './presentation/middlewares/error.middleware.js';
 import { env } from './config/env.js';
+import { swaggerSpec } from './config/swagger.js';
 
 export const createApp = () => {
     const app = express();
@@ -18,6 +19,12 @@ export const createApp = () => {
 
     if (env.isDev) {
         app.use(morgan('dev'));
+        app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec,{
+            customSiteTitle: 'Aura Health API Docs',
+            swaggerOptions: {
+                persistAuthorization: true,
+            },
+        }));
     }
 
     app.use("/api", routes);
