@@ -8,9 +8,12 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --testPathPattern='(usecase|service|schema|wrapper)'",
+    "test:e2e": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --testPathPattern='e2e'",
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "swagger": "node scripts/generate-swagger.js"
   },
   "repository": {
     "type": "git",
