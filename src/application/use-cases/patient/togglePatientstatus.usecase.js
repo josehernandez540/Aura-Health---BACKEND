@@ -1,4 +1,5 @@
 import { NotFoundError, ValidationError } from '../../../shared/errors/errors.js';
+import { Patient } from '../../../domain/entities/patient.entity.js';
 
 class TogglePatientStatusUseCase {
   constructor(patientRepository) {
@@ -6,9 +7,8 @@ class TogglePatientStatusUseCase {
   }
 
   async execute({ patientId, status }, context = {}) {
-    const ALLOWED_STATUSES = ['ACTIVE', 'INACTIVE'];
-    if (!ALLOWED_STATUSES.includes(status)) {
-      throw new ValidationError(`Estado inválido. Valores permitidos: ${ALLOWED_STATUSES.join(', ')}`);
+    if (!Patient.isValidStatus(status)) {
+      throw new ValidationError(`Estado inválido. Valores permitidos: ACTIVE, INACTIVE`);
     }
 
     const patient = await this.patientRepository.findById(patientId);

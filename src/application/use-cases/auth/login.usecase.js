@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { AuthenticationError } from '../../../shared/errors/errors.js';
+import { User } from '../../../domain/entities/user.entity.js';
 
 class LoginUseCase {
   constructor(userRepository, jwtService) {
@@ -8,40 +9,45 @@ class LoginUseCase {
   }
 
   async execute({ email, password }, context = {}) {
-    const user = await this.userRepository.findByEmail(email);
+    const userData = await this.userRepository.findByEmail(email);
 
-    context.user = user;
+    context.user = userData;
 
-    if (!user) {
+    if (!userData) {
       throw new AuthenticationError('Credenciales inválidas');
     }
 
-    if (user.is_active === false) {
+    const user = new User({
+      id: userData.id,
+      email: userData.email,
+      password: userData.password,
+      role: userData.roles.name,
+      isActive: userData.is_active,
+      mustChangePassword: userData.must_change_password,
+    });
+
+    if (!user.canAuthenticate()) {
       throw new AuthenticationError('Usuario inactivo. Contacte al administrador');
     }
 
-    
-    const isMatch = await bcrypt.compare(password, user.password);
-    
+    const isMatch = await bcrypt.compare(password, userData.password);
     if (!isMatch) {
       throw new AuthenticationError('Credenciales inválidas');
     }
 
-    const mustChangePassword = user.must_change_password === true;
-
     const token = this.jwtService.generateToken({
-      userId: user.id,
-      role: user.roles.name,
-      mustChangePassword,
+      userId: userData.id,
+      role: userData.roles.name,
+      mustChangePassword: user.requiresPasswordChange(),
     });
 
     return {
       token,
-      mustChangePassword,
+      mustChangePassword: user.requiresPasswordChange(),
       user: {
-        id: user.id,
-        email: user.email,
-        role: user.roles.name,
+        id: userData.id,
+        email: userData.email,
+        role: userData.roles.name,
       },
     };
   }
