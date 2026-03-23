@@ -1,14 +1,26 @@
-class User {
-  constructor({ id, email, password, role }) {
+export class User {
+  constructor({ id, email, password, role, isActive, mustChangePassword }) {
     this.id = id;
     this.email = email;
     this.password = password;
     this.role = role;
+    this.isActive = isActive ?? true;
+    this.mustChangePassword = mustChangePassword ?? false;
+  }
+
+  canAuthenticate() {
+    return this.isActive === true;
+  }
+
+  requiresPasswordChange() {
+    return this.mustChangePassword === true;
   }
 
   isAdmin() {
     return this.role === 'ADMIN';
   }
-}
 
-export default User;
+  isDoctor() {
+    return this.role === 'DOCTOR';
+  }
+}
