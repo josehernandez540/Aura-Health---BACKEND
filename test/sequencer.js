@@ -3,7 +3,7 @@ import Sequencer from '@jest/test-sequencer';
 class CustomSequencer extends Sequencer {
   sort(tests) {
     const order = [
-      // Utilidades core
+      // Core utilities
       'audit.service.test',
       'audit.wrapper.test',
       // Auth
@@ -12,17 +12,22 @@ class CustomSequencer extends Sequencer {
       // Schemas
       'createDoctor.schema.test',
       'patient.schema.test',
-      // Use cases doctores
+      'appointment.schema.test',           
+      // Doctor use-cases
       'createDoctor.usecase.test',
       'toggleDoctorStatus.usecase.test',
-      // Use cases pacientes
+      // Patient use-cases
       'createPatient.usecase.test',
       'updatePatient.usecase.test',
       'togglePatientStatus.usecase.test',
-      // E2E
+      // Appointment use-cases                
+      'createAppointment.usecase.test',
+      'updateAppointmentStatus.usecase.test',
+      // E2E (require a real DB)
       'auth.e2e.test',
       'doctorStatus.e2e.test',
       'patient.e2e.test',
+      'appointment.e2e.test',              
     ];
 
     return [...tests].sort((a, b) => {
