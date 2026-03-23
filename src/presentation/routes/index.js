@@ -4,6 +4,7 @@ import authMiddleware from "../middlewares/auth.middleware.js";
 import adminRoute from "./admin.routes.js";
 import doctorRoute from './doctor.routes.js';
 import patientRoute from './patient.routes.js';
+import appointmentRoute from "./appointment.routes.js";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.get("/v1/protected", authMiddleware, (req, res) => {
 router.use("/v1/admin", authMiddleware, adminRoute);
 router.use('/v1/doctors', authMiddleware, doctorRoute);
 router.use('/v1/patients', authMiddleware, patientRoute);
+router.use('/v1/appointments', authMiddleware, appointmentRoute);
 
 export default router;
