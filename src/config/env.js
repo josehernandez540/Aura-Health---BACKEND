@@ -9,6 +9,7 @@ export const env = {
   isProd: process.env.NODE_ENV === "production",
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN,
+  databaseUrl: process.env.DATABASE_URL,
   smtp: {
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
