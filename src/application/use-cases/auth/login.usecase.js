@@ -20,19 +20,24 @@ class LoginUseCase {
       throw new AuthenticationError('Usuario inactivo. Contacte al administrador');
     }
 
+    
     const isMatch = await bcrypt.compare(password, user.password);
-
+    
     if (!isMatch) {
       throw new AuthenticationError('Credenciales inválidas');
     }
 
+    const mustChangePassword = user.must_change_password === true;
+
     const token = this.jwtService.generateToken({
       userId: user.id,
       role: user.roles.name,
+      mustChangePassword,
     });
 
     return {
       token,
+      mustChangePassword,
       user: {
         id: user.id,
         email: user.email,

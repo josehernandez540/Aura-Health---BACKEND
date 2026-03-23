@@ -34,6 +34,7 @@ class PrismaUserRepository extends UserRepository {
           email,
           password,
           role_id: roleId,
+          must_change_password: true,
         },
       });
  
@@ -53,10 +54,22 @@ class PrismaUserRepository extends UserRepository {
           document_number: documentNumber,
           phone: phone ?? null,
           email,
+          is_active: true,
         },
       });
  
       return { user, doctor };
+    });
+  }
+
+  async updatePassword(id, hashedPassword) {
+    return prisma.users.update({
+      where: { id },
+      data: {
+        password: hashedPassword,
+        must_change_password: false,
+        updated_at: new Date(),
+      },
     });
   }
 }
