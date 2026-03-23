@@ -25,6 +25,10 @@ export const createApp = () => {
                 persistAuthorization: true,
             },
         }));
+        app.get('/api/docs-json', (req, res) => {
+            res.setHeader('Content-Type', 'application/json');
+            res.send(swaggerSpec);
+        });
     }
 
     app.use("/api", routes);
