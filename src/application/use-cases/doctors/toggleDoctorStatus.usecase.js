@@ -7,18 +7,15 @@ class ToggleDoctorStatusUseCase {
     this.doctorRepository = doctorRepository;
   }
 
-  async execute({ doctorId, status, performedBy }, context = {}) {
-    
-    if (!Doctor.isValidStatus(status)) {
-      throw new ValidationError(`Estado inválido. Valores permitidos: ACTIVE, INACTIVE`);
-    }
+  async execute({ doctorId, performedBy }, context = {}) {
 
     const doctor = await this.doctorRepository.findById(doctorId);
     if (!doctor) {
       throw new NotFoundError(`Médico con id ${doctorId} no encontrado`);
     }
 
-    const updated = await this.doctorRepository.updateStatus(doctorId, status, performedBy);
+    const newStatus = doctor.is_active ? 'INACTIVE' : 'ACTIVE';
+    const updated = await this.doctorRepository.updateStatus(doctorId, newStatus, performedBy);
 
     context.doctor = updated;
 
