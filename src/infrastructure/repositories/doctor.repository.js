@@ -19,7 +19,6 @@ class PrismaDoctorRepository extends DoctorRepository {
     const skip = (page - 1) * limit;
     const [items, total] = await Promise.all([
       prisma.doctors.findMany({
-        where: { is_active: true },
         skip,
         take: limit,
         include: { users: { select: { email: true } } },
@@ -51,6 +50,61 @@ class PrismaDoctorRepository extends DoctorRepository {
       return doctor;
     });
   }
+
+  async findByIdWithDetails(id) {
+    return prisma.doctors.findUnique({
+      where: { id },
+      include: {
+        users: {
+          select: {
+            id: true,
+            email: true,
+            is_active: true,
+            must_change_password: true,
+            created_at: true,
+            roles: { select: { name: true } },
+          },
+        },
+        appointments: {
+          orderBy: { date: 'desc' },
+          include: {
+            patients: {
+              select: {
+                id: true,
+                name: true,
+                document_number: true,
+                phone: true,
+                email: true,
+              },
+            },
+          },
+        },
+        treatments: {
+          orderBy: { created_at: 'desc' },
+          include: {
+            patients: {
+              select: {
+                id: true,
+                name: true,
+                document_number: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async update(id, data) {
+  return prisma.doctors.update({
+    where: { id },
+    data: {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.specialization !== undefined && { specialization: data.specialization }),
+      ...(data.licenseNumber !== undefined && { license_number: data.licenseNumber })
+    },
+  });
+}
 }
 
 export default PrismaDoctorRepository;
