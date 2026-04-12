@@ -11,6 +11,48 @@ class PrismaPatientRepository extends PatientRepository {
   async findById(id) {
     return prisma.patients.findUnique({
       where: { id },
+      include: {
+        appointments: {
+          orderBy: { date: 'desc' },
+          include: {
+            doctors: {
+              select: { id: true, name: true, specialization: true },
+            },
+            appointment_history: {
+              orderBy: { created_at: 'asc' },
+            },
+          },
+        },
+        medical_records: {
+          orderBy: { created_at: 'desc' },
+          include: {
+            users: {
+              select: { id: true, email: true },
+            },
+            risk_classifications: true,
+          },
+        },
+        treatments: {
+          orderBy: { created_at: 'desc' },
+          include: {
+            doctors: {
+              select: { id: true, name: true, specialization: true },
+            },
+            medication_changes: {
+              orderBy: { created_at: 'asc' },
+              include: {
+                users: { select: { id: true, email: true } },
+              },
+            },
+            treatment_approvals: {
+              orderBy: { approved_at: 'desc' },
+              include: {
+                users: { select: { id: true, email: true } },
+              },
+            },
+          },
+        },
+      },
     });
   }
 
