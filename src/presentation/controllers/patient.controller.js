@@ -6,6 +6,8 @@ import AuditRepository from '../../infrastructure/repositories/audit.repository.
 import PrismaPatientRepository from '../../infrastructure/repositories/patient.repository.js';
 import { successResponse } from '../../shared/utils/apiResponse.js';
 import { withAudit } from '../../shared/utils/audit-wrapper.js';
+const { NotFoundError } = await import('../../shared/errors/errors.js');
+
 
 const patientRepository = new PrismaPatientRepository();
 const auditRepository = new AuditRepository();
@@ -77,9 +79,8 @@ class PatientController {
   async updateStatus(req, res, next) {
     try {
       const { id: patientId } = req.params;
-      const { status } = req.body;
-      const result = await toggleStatusUseCase.execute({ patientId, status });
-      const msg = status === 'ACTIVE' ? 'activado' : 'inactivado';
+      const result = await toggleStatusUseCase.execute({ patientId });
+      const msg = result.isActive ? 'activado' : 'inactivado';
       return successResponse(res, result, `Paciente ${msg} correctamente`);
     } catch (error) {
       next(error);
@@ -114,7 +115,6 @@ class PatientController {
       const patient = await patientRepository.findById(id);
 
       if (!patient) {
-        const { NotFoundError } = await import('../../shared/errors/errors.js');
         return next(new NotFoundError(`Paciente con id ${id} no encontrado`));
       }
 
