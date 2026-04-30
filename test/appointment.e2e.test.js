@@ -350,7 +350,7 @@ describe('REQ-04 – Concurrency', () => {
       request(app).post('/api/v1/appointments').set('Authorization', `Bearer ${adminToken}`).send(payload),
     ]);
 
-    const statuses = [res1.statusCode, res2.statusCode].sort();
+    const statuses = [res1.statusCode, res2.statusCode].sort((a, b) => a - b);
 
     expect(statuses).toEqual([200, 409]);
 

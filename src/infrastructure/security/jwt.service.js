@@ -11,7 +11,7 @@ class JwtService {
   verifyToken(token) {
     try {
       return jwt.verify(token, env.jwtSecret);
-    } catch (error) {
+    } catch {
       throw new Error('Invalid token');
     }
   }
