@@ -1,5 +1,4 @@
-import { NotFoundError, ValidationError } from '../../../shared/errors/errors.js';
-import { Doctor } from '../../../domain/entities/doctor.entity.js';
+import { NotFoundError } from '../../../shared/errors/errors.js';
 
 
 class ToggleDoctorStatusUseCase {

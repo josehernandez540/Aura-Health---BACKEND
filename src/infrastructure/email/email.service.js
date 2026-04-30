@@ -1,16 +1,15 @@
 import nodemailer from 'nodemailer';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { env } from '../../config/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 class EmailService {
-  constructor() {
-    this._transport = null;
-  }
+
+  _transport = null;
 
   async _getTransport() {
     if (this._transport) return this._transport;
@@ -84,9 +83,9 @@ class EmailService {
     try {
       let content = await fs.readFile(templatePath, 'utf8');
 
-      content = content.replace(/{{name}}/g, name);
-      content = content.replace(/{{email}}/g, email);
-      content = content.replace(/{{password}}/g, password);
+      content = content.replaceAll('{{name}}', name);
+      content = content.replaceAll('{{email}}', email);
+      content = content.replaceAll('{{password}}', password);
 
       return content;
     } catch (error) {

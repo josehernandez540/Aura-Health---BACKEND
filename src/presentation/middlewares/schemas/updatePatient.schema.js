@@ -10,7 +10,7 @@ export const updatePatientSchema = z.object({
 
     birthDate: z
         .string()
-        .refine((v) => !v || !isNaN(Date.parse(v)), 'La fecha de nacimiento no es válida')
+        .refine((v) => !v || !Number.isNaN(Date.parse(v)), 'La fecha de nacimiento no es válida')
         .optional(),
 
     phone: z
