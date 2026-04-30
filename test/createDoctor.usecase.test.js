@@ -1,4 +1,3 @@
-import bcrypt from 'bcryptjs';
 import { jest } from '@jest/globals';
 import CreateDoctorUseCase from '../src/application/use-cases/doctors/createDoctor.usecase.js';
 

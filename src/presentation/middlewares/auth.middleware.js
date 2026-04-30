@@ -30,7 +30,7 @@ const authMiddleware = async (req, res, next) => {
     req.user = decoded;
 
     next();
-  } catch (error) {
+  } catch {
     next(new AuthenticationError('No autorizado'));
   }
 };

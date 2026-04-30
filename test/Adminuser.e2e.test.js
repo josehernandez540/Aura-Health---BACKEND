@@ -50,13 +50,13 @@ afterAll(async () => {
 
 describe('Admin Users – Authorization', () => {
   it('should reject unauthenticated request (401)', async () => {
-    const res = await request(app).get('/api/v1/admin-users');
+    const res = await request(app).get('/api/v1/admin');
     expect(res.statusCode).toBe(401);
   });
 
   it('should reject DOCTOR role (401)', async () => {
     const res = await request(app)
-      .get('/api/v1/admin-users')
+      .get('/api/v1/admin')
       .set('Authorization', `Bearer ${doctorToken}`);
     expect(res.statusCode).toBe(401);
   });
@@ -65,7 +65,7 @@ describe('Admin Users – Authorization', () => {
 describe('Admin Users – List', () => {
   it('should list admin users with pagination (200)', async () => {
     const res = await request(app)
-      .get('/api/v1/admin-users?page=1&limit=5')
+      .get('/api/v1/admin?page=1&limit=5')
       .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.statusCode).toBe(200);
@@ -78,7 +78,7 @@ describe('Admin Users – List', () => {
 
   it('each item should have required fields', async () => {
     const res = await request(app)
-      .get('/api/v1/admin-users')
+      .get('/api/v1/admin')
       .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.statusCode).toBe(200);
@@ -97,7 +97,7 @@ describe('Admin Users – Create', () => {
     const uniqueEmail = `admin.e2e.${Date.now()}@aura.com`;
 
     const res = await request(app)
-      .post('/api/v1/admin-users')
+      .post('/api/v1/admin')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ email: uniqueEmail, name: 'Admin E2E Test' });
 
@@ -112,7 +112,7 @@ describe('Admin Users – Create', () => {
 
   it('should reject duplicate email (409)', async () => {
     const res = await request(app)
-      .post('/api/v1/admin-users')
+      .post('/api/v1/admin')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ email: 'admin@aura.com', name: 'Duplicado' });
 
@@ -121,7 +121,7 @@ describe('Admin Users – Create', () => {
 
   it('should reject missing email (400)', async () => {
     const res = await request(app)
-      .post('/api/v1/admin-users')
+      .post('/api/v1/admin')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ name: 'Sin email' });
 
@@ -130,7 +130,7 @@ describe('Admin Users – Create', () => {
 
   it('should reject invalid email format (400)', async () => {
     const res = await request(app)
-      .post('/api/v1/admin-users')
+      .post('/api/v1/admin')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ email: 'not-an-email', name: 'Test' });
 
@@ -139,7 +139,7 @@ describe('Admin Users – Create', () => {
 
   it('should reject DOCTOR role creating admin (401)', async () => {
     const res = await request(app)
-      .post('/api/v1/admin-users')
+      .post('/api/v1/admin')
       .set('Authorization', `Bearer ${doctorToken}`)
       .send({ email: 'hacker@aura.com', name: 'Hacker' });
 
@@ -152,7 +152,7 @@ describe('Admin Users – Get by ID', () => {
     if (!createdAdminId) return;
 
     const res = await request(app)
-      .get(`/api/v1/admin-users/${createdAdminId}`)
+      .get(`/api/v1/admin/${createdAdminId}`)
       .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.statusCode).toBe(200);
@@ -162,7 +162,7 @@ describe('Admin Users – Get by ID', () => {
   it('should return 404 for non-existent admin', async () => {
     const fakeId = '00000000-0000-0000-0000-000000000000';
     const res = await request(app)
-      .get(`/api/v1/admin-users/${fakeId}`)
+      .get(`/api/v1/admin/${fakeId}`)
       .set('Authorization', `Bearer ${adminToken}`);
 
     expect(res.statusCode).toBe(404);
@@ -175,7 +175,7 @@ describe('Admin Users – Update', () => {
 
     const newEmail = `admin.updated.${Date.now()}@aura.com`;
     const res = await request(app)
-      .put(`/api/v1/admin-users/${createdAdminId}`)
+      .put(`/api/v1/admin/${createdAdminId}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ email: newEmail });
 
@@ -187,7 +187,7 @@ describe('Admin Users – Update', () => {
     if (!createdAdminId) return;
 
     const res = await request(app)
-      .put(`/api/v1/admin-users/${createdAdminId}`)
+      .put(`/api/v1/admin/${createdAdminId}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({});
 
@@ -197,7 +197,7 @@ describe('Admin Users – Update', () => {
   it('should return 404 for non-existent admin', async () => {
     const fakeId = '00000000-0000-0000-0000-000000000000';
     const res = await request(app)
-      .put(`/api/v1/admin-users/${fakeId}`)
+      .put(`/api/v1/admin/${fakeId}`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ email: 'nuevo@aura.com' });
 
@@ -210,7 +210,7 @@ describe('Admin Users – Toggle Status', () => {
     if (!createdAdminId) return;
 
     const res = await request(app)
-      .patch(`/api/v1/admin-users/${createdAdminId}/status`)
+      .patch(`/api/v1/admin/${createdAdminId}/status`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'INACTIVE' });
 
@@ -222,7 +222,7 @@ describe('Admin Users – Toggle Status', () => {
     if (!createdAdminId) return;
 
     const res = await request(app)
-      .patch(`/api/v1/admin-users/${createdAdminId}/status`)
+      .patch(`/api/v1/admin/${createdAdminId}/status`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'ACTIVE' });
 
@@ -234,7 +234,7 @@ describe('Admin Users – Toggle Status', () => {
     if (!createdAdminId) return;
 
     const res = await request(app)
-      .patch(`/api/v1/admin-users/${createdAdminId}/status`)
+      .patch(`/api/v1/admin/${createdAdminId}/status`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'DELETED' });
 
@@ -242,16 +242,12 @@ describe('Admin Users – Toggle Status', () => {
   });
 
   it('should reject self-deactivation (400)', async () => {
-    // El admin principal intenta desactivarse a sí mismo
-    const meRes = await request(app)
-      .get('/api/v1/admin-users')
-      .set('Authorization', `Bearer ${adminToken}`);
 
     const adminUser = await prisma.users.findUnique({ where: { email: 'admin@aura.com' } });
     if (!adminUser) return;
 
     const res = await request(app)
-      .patch(`/api/v1/admin-users/${adminUser.id}/status`)
+      .patch(`/api/v1/admin/${adminUser.id}/status`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'INACTIVE' });
 
@@ -261,7 +257,7 @@ describe('Admin Users – Toggle Status', () => {
   it('should return 404 for non-existent admin', async () => {
     const fakeId = '00000000-0000-0000-0000-000000000000';
     const res = await request(app)
-      .patch(`/api/v1/admin-users/${fakeId}/status`)
+      .patch(`/api/v1/admin/${fakeId}/status`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'INACTIVE' });
 

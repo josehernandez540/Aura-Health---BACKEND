@@ -60,7 +60,7 @@ class PrismaAdminUserRepository extends AdminUserRepository {
       },
     });
 
-    if (!user || user.roles.name !== 'ADMIN') return null;
+    if (user?.roles?.name !== 'ADMIN') return null;
     return this._mapRow(user);
   }
 

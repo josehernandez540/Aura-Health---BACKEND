@@ -35,7 +35,6 @@ class LoginUseCase {
       throw new AuthenticationError('Credenciales inválidas');
     }
 
-    const mustChangePassword = user.must_change_password === true;
 
     const token = this.jwtService.generateToken({
       userId: userData.id,
