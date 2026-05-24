@@ -13,7 +13,7 @@ class EmailService {
 
   async _getTransport() {
     if (this._transport) return this._transport;
-    
+
     if (env.smtp.host) {
       this._transport = nodemailer.createTransport({
         host: env.smtp.host,
@@ -41,25 +41,53 @@ class EmailService {
     return this._transport;
   }
 
+
+  async _loadTemplate(templateName) {
+    const templatePath = path.join(__dirname, 'templates', templateName);
+    try {
+      return await fs.readFile(templatePath, 'utf8');
+    } catch (error) {
+      console.error(`Error leyendo template ${templateName}:`, error);
+      return null;
+    }
+  }
+
+  _replacePlaceholders(template, vars) {
+    return Object.entries(vars).reduce(
+      (html, [key, value]) => html.replace(new RegExp(`{{${key}}}`, 'g'), value ?? ''),
+      template
+    );
+  }
+
   async sendWelcomeEmail({ to, name, tempPassword }) {
     try {
       const transport = await this._getTransport();
       const from = env.smtp.from ?? '"Aura Health" <no-reply@aurahealth.com>';
 
-      const htmlBody = await this._buildHtmlBody(name, to, tempPassword);
+      const rawTemplate = await this._loadTemplate('welcome-email.html');
+
+      const html = rawTemplate
+        ? this._replacePlaceholders(rawTemplate, { name, email: to, password: tempPassword })
+        : `<h2>Bienvenido ${name}</h2><p>Tu clave es: ${tempPassword}</p>`;
 
       const info = await transport.sendMail({
         from,
         to,
         subject: 'Bienvenido a Aura Health — Credenciales de acceso',
-        text: this._buildTextBody(name, to, tempPassword),
-        html: htmlBody,
+        text: [
+          `Hola ${name},`,
+          'Tu cuenta en Aura Health ha sido creada exitosamente.',
+          `Correo: ${to}`,
+          `Contraseña: ${tempPassword}`,
+          'Por seguridad, cambia tu contraseña en el primer inicio de sesión.',
+        ].join('\n'),
+        html,
       });
 
       if (nodemailer.getTestMessageUrl(info)) {
         console.info('Email preview URL:', nodemailer.getTestMessageUrl(info));
       }
-      
+
       return info;
     } catch (error) {
       console.error('Error enviando email:', error);
@@ -67,31 +95,62 @@ class EmailService {
     }
   }
 
-  _buildTextBody(name, email, password) {
-    return [
-      `Hola ${name},`,
-      'Tu cuenta en Aura Health ha sido creada exitosamente.',
-      `Correo: ${email}`,
-      `Contraseña: ${password}`,
-      'Por seguridad, cambia tu contraseña en el primer inicio de sesión.',
-    ].join('\n');
-  }
-
-  async _buildHtmlBody(name, email, password) {
-    const templatePath = path.join(__dirname, 'templates', 'welcome-email.html');
-    
+  async sendAppointmentCancellationEmail({
+    to,
+    patientName,
+    date,
+    startTime,
+    endTime,
+    doctorName,
+    specialization,
+    reason,
+  }) {
     try {
-      let content = await fs.readFile(templatePath, 'utf8');
+      const transport = await this._getTransport();
+      const from = env.smtp.from ?? '"Aura Health" <no-reply@aurahealth.com>';
 
-      content = content.replaceAll('{{name}}', name);
-      content = content.replaceAll('{{email}}', email);
-      content = content.replaceAll('{{password}}', password);
+      const rawTemplate = await this._loadTemplate('cancellation-email.html');
+      const html = rawTemplate
+        ? this._replacePlaceholders(rawTemplate, {
+          patientName,
+          date,
+          startTime,
+          endTime,
+          doctorName,
+          specialization: specialization ?? 'No especificada',
+          reason,
+        })
+        : `<p>Hola ${patientName}, tu cita del ${date} ha sido cancelada. Motivo: ${reason}</p>`;
 
-      return content;
+      const textBody = [
+        `Hola ${patientName},`,
+        '',
+        'Tu cita médica ha sido CANCELADA por el equipo administrativo de Aura Health.',
+        '',
+        `Fecha    : ${date}`,
+        `Horario  : ${startTime} – ${endTime}`,
+        `Médico   : ${doctorName}`,
+        `Motivo   : ${reason}`,
+        '',
+        'Si deseas reagendar, comunícate con administración: admin@aurahealth.com',
+      ].join('\n');
+
+      const info = await transport.sendMail({
+        from,
+        to,
+        subject: 'Aura Health — Tu cita ha sido cancelada',
+        text: textBody,
+        html,
+      });
+
+      if (nodemailer.getTestMessageUrl(info)) {
+        console.info('Cancellation email preview URL:', nodemailer.getTestMessageUrl(info));
+      }
+
+      return info;
     } catch (error) {
-      console.error('Error leyendo el template de email:', error);
-      
-      return `<h2>Bienvenido ${name}</h2><p>Tu clave es: ${password}</p>`;
+      console.error('Error enviando cancellation email:', error);
+      throw error;
     }
   }
 }

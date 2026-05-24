@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    .container {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .header {
+      background-color: #263b4e;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+    .content {
+      padding: 32px;
+      color: #374151;
+      line-height: 1.6;
+    }
+    .appointment-box {
+      background-color: #fef2f2;
+      border: 1px solid #263b4e ;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 24px 0;
+    }
+    .appointment-box p {
+      margin: 6px 0;
+    }
+    .reason-box {
+      background-color: #f9fafb;
+      border-left: 4px solid #263b4e;
+      border-radius: 4px;
+      padding: 16px 20px;
+      margin: 24px 0;
+      color: #374151;
+    }
+    .reason-box strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #263b4e;
+    }
+    .footer {
+      background-color: #f3f4f6;
+      color: #6b7280;
+      padding: 16px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .cta {
+      text-align: center;
+      margin: 28px 0 8px;
+    }
+    .cta a {
+      background-color: #2563eb;
+      color: white;
+      padding: 12px 28px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Cita Cancelada</h1>
+    </div>
+    <div class="content">
+      <p>Hola <strong>{{patientName}}</strong>,</p>
+      <p>
+        Te informamos que tu cita médica ha sido <strong>cancelada</strong> por el equipo
+        administrativo de Aura Health.
+      </p>
+
+      <div class="appointment-box">
+        <p><strong>Fecha:</strong> {{date}}</p>
+        <p><strong>Hora:</strong> {{startTime}} – {{endTime}}</p>
+        <p><strong>Médico:</strong> {{doctorName}}</p>
+        <p><strong>Especialidad:</strong> {{specialization}}</p>
+      </div>
+
+      <div class="reason-box">
+        <strong>Motivo de cancelación:</strong>
+        {{reason}}
+      </div>
+
+      <p>
+        Si deseas reagendar tu cita o tienes alguna duda, por favor comunícate con nuestro
+        equipo administrativo.
+      </p>
+
+      <div class="cta">
+        <a href="mailto:admin@aurahealth.com">Contactar administración</a>
+      </div>
+    </div>
+    <div class="footer">
+      &copy; 2026 Aura Health — Transformando la gestión médica.
+    </div>
+  </div>
+</body>
+</html>
