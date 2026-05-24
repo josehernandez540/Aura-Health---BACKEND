@@ -154,6 +154,33 @@ class PrismaAppointmentRepository extends AppointmentRepository {
 
     return this._mapRow(row);
   }
+
+  async cancelWithReason(id, reason, performedBy) {
+    const now = new Date();
+    const notesValue = `CANCELLATION_REASON: ${reason}`;
+
+    const row = await prisma.appointments.update({
+      where: { id },
+      data: {
+        status: 'CANCELLED',
+        notes: notesValue,
+      },
+      include: {
+        doctors: { select: { id: true, name: true, specialization: true } },
+        patients: { select: { id: true, name: true, document_number: true } },
+      },
+    });
+
+    await prisma.appointment_history.create({
+      data: {
+        appointment_id: id,
+        action: `CANCELLED — ${reason}`,
+        performed_by: performedBy ?? null,
+      },
+    });
+
+    return this._mapRow(row, { cancellationReason: reason, cancelledAt: now });
+  }
 }
 
 export default PrismaAppointmentRepository;

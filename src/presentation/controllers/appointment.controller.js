@@ -9,6 +9,8 @@ import { successResponse } from '../../shared/utils/apiResponse.js';
 import { withAudit } from '../../shared/utils/audit-wrapper.js';
 import { AuditActions } from '../../domain/constants/audit-actions.js';
 import { NotFoundError } from '../../shared/errors/errors.js';
+import CancelAppointmentUseCase from '../../application/use-cases/appointment/cancelAppointment.usecase.js';
+import emailService from '../../infrastructure/email/email.service.js';
 
 const appointmentRepository = new PrismaAppointmentRepository();
 const doctorRepository = new PrismaDoctorRepository();
@@ -23,6 +25,12 @@ const createRaw = new CreateAppointmentUseCase(
 );
 
 const updateStatusRaw = new UpdateAppointmentStatusUseCase(appointmentRepository);
+
+const cancelRaw = new CancelAppointmentUseCase(
+  appointmentRepository,
+  patientRepository,
+  emailService,
+);
 
 const createUseCase = {
   execute: withAudit(createRaw.execute.bind(createRaw), auditService, {
@@ -53,6 +61,19 @@ const updateStatusUseCase = {
   }),
 };
 
+const cancelUseCase = {
+  execute: withAudit(cancelRaw.execute.bind(cancelRaw), auditService, {
+    action: AuditActions.APPOINTMENT_CANCELLED_BY_ADMIN,
+    entityType: 'APPOINTMENT',
+    getUserId: (_r, _p, ctx) => ctx?.user?.userId ?? null,
+    getEntityId: (_r, params) => params.appointmentId,
+    getMetadata: (params) => ({
+      reason: params.reason,
+      performedBy: params.performedBy,
+    }),
+  }),
+};
+
 class AppointmentController {
   async create(req, res, next) {
     try {
@@ -78,6 +99,24 @@ class AppointmentController {
       });
 
       return successResponse(res, result, `Cita actualizada a estado: ${status}`);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async cancel(req, res, next) {
+    try {
+      const { id: appointmentId } = req.params;
+      const { reason } = req.body;
+      const performedBy = req.user?.userId ?? null;
+
+      const result = await cancelUseCase.execute({
+        appointmentId,
+        reason,
+        performedBy,
+      });
+
+      return successResponse(res, result, 'Cita cancelada correctamente');
     } catch (error) {
       next(error);
     }
