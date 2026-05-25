@@ -34,5 +34,11 @@ export const createPatientSchema = z.object({
         .email('El correo electrónico no es válido')
         .max(255, 'El correo no puede superar los 255 caracteres')
         .optional(),
+    
+    diseaseCount: z
+        .number()
+        .int()
+        .min(0)
+        .optional(),
 });
 
