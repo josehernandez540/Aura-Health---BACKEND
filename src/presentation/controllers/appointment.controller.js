@@ -34,6 +34,12 @@ const cancelRaw = new CancelAppointmentUseCase(
   emailService,
 );
 
+const cancelRaw = new CancelAppointmentUseCase(
+  appointmentRepository,
+  patientRepository,
+  emailService,
+);
+
 const createUseCase = {
   execute: withAudit(createRaw.execute.bind(createRaw), auditService, {
     action: AuditActions.APPOINTMENT_CREATED,
