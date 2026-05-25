@@ -41,9 +41,16 @@ class EmailService {
     return this._transport;
   }
 
+  async _getEmailConfig() {
+    return {
+      transport: await this._getTransport(),
+      from: env.smtp.from ?? '"Aura Health" <no-reply@aurahealth.com>',
+    };
+  }
 
   async _loadTemplate(templateName) {
     const templatePath = path.join(__dirname, 'templates', templateName);
+
     try {
       return await fs.readFile(templatePath, 'utf8');
     } catch (error) {
@@ -59,10 +66,39 @@ class EmailService {
     );
   }
 
-  async sendWelcomeEmail({ to, name, tempPassword }) {
+  _formatDate(date) {
+    return new Date(date).toLocaleDateString('es-CO', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'UTC',
+    });
+  }
+
+  _buildAppointmentLabel(date, startTime, endTime) {
+    return `${this._formatDate(date)} de ${startTime} a ${endTime}`;
+  }
+
+  _logPreview(info, type = 'Email') {
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+
+    if (previewUrl) {
+      console.info(`${type} preview URL:`, previewUrl);
+    }
+  }
+
+  _logError(context, error) {
+    console.error(`Error ${context}:`, error);
+  }
+
+  async sendWelcomeEmail({
+    to,
+    name,
+    tempPassword,
+  }) {
     try {
-      const transport = await this._getTransport();
-      const from = env.smtp.from ?? '"Aura Health" <no-reply@aurahealth.com>';
+      const { transport, from } = await this._getEmailConfig();
 
       const rawTemplate = await this._loadTemplate('welcome-email.html');
 
@@ -70,27 +106,30 @@ class EmailService {
         ? this._replacePlaceholders(rawTemplate, { name, email: to, password: tempPassword })
         : `<h2>Bienvenido ${name}</h2><p>Tu clave es: ${tempPassword}</p>`;
 
+      const text = [
+        `Hola ${name},`,
+        '',
+        'Tu cuenta en Aura Health ha sido creada exitosamente.',
+        '',
+        `Correo: ${to}`,
+        `Contraseña temporal: ${tempPassword}`,
+        '',
+        'Por seguridad, cambia tu contraseña al iniciar sesión.',
+      ].join('\n');
+
       const info = await transport.sendMail({
         from,
         to,
-        subject: 'Bienvenido a Aura Health — Credenciales de acceso',
-        text: [
-          `Hola ${name},`,
-          'Tu cuenta en Aura Health ha sido creada exitosamente.',
-          `Correo: ${to}`,
-          `Contraseña: ${tempPassword}`,
-          'Por seguridad, cambia tu contraseña en el primer inicio de sesión.',
-        ].join('\n'),
+        subject: 'Aura Health — Bienvenido',
+        text,
         html,
       });
 
-      if (nodemailer.getTestMessageUrl(info)) {
-        console.info('Email preview URL:', nodemailer.getTestMessageUrl(info));
-      }
+      this._logPreview(info, 'Welcome email');
 
       return info;
     } catch (error) {
-      console.error('Error enviando email:', error);
+      this._logError('enviando email de bienvenida', error);
       throw error;
     }
   }
@@ -106,50 +145,144 @@ class EmailService {
     reason,
   }) {
     try {
-      const transport = await this._getTransport();
-      const from = env.smtp.from ?? '"Aura Health" <no-reply@aurahealth.com>';
+      const { transport, from } = await this._getEmailConfig();
 
-      const rawTemplate = await this._loadTemplate('cancellation-email.html');
+      const rawTemplate = await this._loadTemplate(
+        'cancellation-email.html'
+      );
+
       const html = rawTemplate
         ? this._replacePlaceholders(rawTemplate, {
-          patientName,
-          date,
-          startTime,
-          endTime,
-          doctorName,
-          specialization: specialization ?? 'No especificada',
-          reason,
-        })
-        : `<p>Hola ${patientName}, tu cita del ${date} ha sido cancelada. Motivo: ${reason}</p>`;
+            patientName,
+            date,
+            startTime,
+            endTime,
+            doctorName,
+            specialization:
+              specialization ?? 'No especificada',
+            reason,
+          })
+        : `
+          <p>
+            Hola ${patientName},
+            tu cita médica ha sido cancelada.
+          </p>
+        `;
 
-      const textBody = [
+      const text = [
         `Hola ${patientName},`,
         '',
-        'Tu cita médica ha sido CANCELADA por el equipo administrativo de Aura Health.',
+        'Tu cita médica ha sido CANCELADA.',
         '',
         `Fecha    : ${date}`,
-        `Horario  : ${startTime} – ${endTime}`,
+        `Horario  : ${startTime} - ${endTime}`,
         `Médico   : ${doctorName}`,
         `Motivo   : ${reason}`,
         '',
-        'Si deseas reagendar, comunícate con administración: admin@aurahealth.com',
+        'Si deseas reagendar, comunícate con administración.',
       ].join('\n');
 
       const info = await transport.sendMail({
         from,
         to,
-        subject: 'Aura Health — Tu cita ha sido cancelada',
-        text: textBody,
+        subject: 'Aura Health — Tu cita fue cancelada',
+        text,
         html,
       });
 
-      if (nodemailer.getTestMessageUrl(info)) {
-        console.info('Cancellation email preview URL:', nodemailer.getTestMessageUrl(info));
-      }
+      this._logPreview(info, 'Cancellation email');
 
       return info;
     } catch (error) {
-      console.error('Error enviando cancellation email:', error);
+      this._logError(
+        'enviando email de cancelación',
+        error
+      );
+
+      throw error;
+    }
+  }
+
+  async sendAppointmentRescheduleEmail({
+    to,
+    patientName,
+    doctorName,
+    previousDate,
+    previousStartTime,
+    previousEndTime,
+    newDate,
+    newStartTime,
+    newEndTime,
+    reason,
+  }) {
+    try {
+      const { transport, from } = await this._getEmailConfig();
+
+      const previousAppointment =
+        this._buildAppointmentLabel(
+          previousDate,
+          previousStartTime,
+          previousEndTime
+        );
+
+      const newAppointment =
+        this._buildAppointmentLabel(
+          newDate,
+          newStartTime,
+          newEndTime
+        );
+
+      const rawTemplate = await this._loadTemplate(
+        'reschedule-email.html'
+      );
+
+      const html = rawTemplate
+        ? this._replacePlaceholders(rawTemplate, {
+            patientName,
+            doctorName,
+            previousAppointment,
+            newAppointment,
+            reason: reason ?? 'No especificado',
+          })
+        : `
+          <p>
+            Hola ${patientName},
+            tu cita fue reprogramada.
+          </p>
+        `;
+
+      const text = [
+        `Hola ${patientName},`,
+        '',
+        `Tu cita con ${doctorName} ha sido reprogramada.`,
+        '',
+        `Cita anterior: ${previousAppointment}`,
+        `Nueva cita: ${newAppointment}`,
+        '',
+        reason ? `Motivo: ${reason}` : '',
+        '',
+        'Si tienes preguntas, comunícate con nosotros.',
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      const info = await transport.sendMail({
+        from,
+        to,
+        subject: 'Aura Health — Tu cita fue reprogramada',
+        text,
+        html,
+      });
+
+      this._logPreview(info, 'Reschedule email');
+
+      return info;
+    } catch (error) {
+      this._logError(
+        'enviando email de reprogramación',
+        error
+      );
+
       throw error;
     }
   }

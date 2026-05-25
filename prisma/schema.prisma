@@ -33,7 +33,7 @@ model appointments {
   doctors             doctors                  @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patients            patients                 @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@unique([doctor_id, date, start_time], map: "unique_doctor_schedule")
+
   @@index([doctor_id, date], map: "idx_appointment_doctor_date")
 }
 
