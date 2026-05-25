@@ -12,6 +12,7 @@ import { NotFoundError } from '../../shared/errors/errors.js';
 import CancelAppointmentUseCase from '../../application/use-cases/appointment/cancelAppointment.usecase.js';
 import RescheduleAppointmentUseCase from '../../application/use-cases/appointment/rescheduleAppointment.usecase.js';
 import emailService from '../../infrastructure/email/email.service.js';
+import MarkAppointmentNoShowUseCase from '../../application/use-cases/appointment/markAppointmentNoShow.usecase.js';
 
 const appointmentRepository = new PrismaAppointmentRepository();
 const doctorRepository = new PrismaDoctorRepository();
@@ -34,10 +35,8 @@ const cancelRaw = new CancelAppointmentUseCase(
   emailService,
 );
 
-const cancelRaw = new CancelAppointmentUseCase(
+const noShowRaw = new MarkAppointmentNoShowUseCase(
   appointmentRepository,
-  patientRepository,
-  emailService,
 );
 
 const createUseCase = {
@@ -93,6 +92,19 @@ const cancelUseCase = {
     getEntityId: (_r, params) => params.appointmentId,
     getMetadata: (params) => ({
       reason: params.reason,
+      performedBy: params.performedBy,
+    }),
+  }),
+};
+
+const noShowUseCase = {
+  execute: withAudit(noShowRaw.execute.bind(noShowRaw), auditService, {
+    action: AuditActions.APPOINTMENT_NO_SHOW,
+    entityType: 'APPOINTMENT',
+    getUserId: (_r, _p, ctx) => ctx?.user?.userId ?? null,
+    getEntityId: (_r, params) => params.appointmentId,
+    getMetadata: (params) => ({
+      reason: params.reason ?? null,
       performedBy: params.performedBy,
     }),
   }),
@@ -203,6 +215,29 @@ class AppointmentController {
       });
 
       return successResponse(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async markNoShow(req, res, next) {
+    try {
+      const { id: appointmentId } = req.params;
+      const { reason } = req.body;
+
+      const performedBy = req.user?.userId ?? null;
+
+      const result = await noShowUseCase.execute({
+        appointmentId,
+        reason,
+        performedBy,
+      });
+
+      return successResponse(
+        res,
+        result,
+        'Cita marcada como no asistida',
+      );
     } catch (error) {
       next(error);
     }

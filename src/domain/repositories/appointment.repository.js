@@ -18,6 +18,10 @@ class AppointmentRepository {
   async updateStatus(id, status, performedBy) {
     throw new Error('Method not implemented');
   }
+
+  async markAsNoShow(id, reason, performedBy) {
+    throw new Error('Method not implemented');
+  }
 }
 
 export default AppointmentRepository;
