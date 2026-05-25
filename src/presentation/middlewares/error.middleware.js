@@ -1,7 +1,17 @@
 import { logger } from "../../config/logger.js";
 import { errorResponse } from "../../shared/utils/apiResponse.js";
+import multer from 'multer';
 
 export const errorMiddleware = (err, req, res, next) => {
+
+  if (err instanceof multer.MulterError) {
+    return errorResponse(
+      res,
+      400,
+      err.message,
+      'UPLOAD_ERROR'
+    );
+  }
 
   const statusCode = err.statusCode || 500;
   const message = err.message || "Error interno del servidor";

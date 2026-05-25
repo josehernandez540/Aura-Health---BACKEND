@@ -19,5 +19,6 @@ export const env = {
       pass: process.env.SMTP_PASS
     },
     from: process.env.SMTP_FROM
-  }  
+  },
+  externalApiKey: process.env.EXTERNAL_API_KEY,
 };
