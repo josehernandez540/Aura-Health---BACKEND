@@ -109,6 +109,8 @@ model patients {
   birth_date      DateTime?         @db.Date
   phone           String?
   email           String?
+  disease_count   Int?              @default(0)
+  risk_level      risk_level_enum?  @default(LOW)
   is_active       Boolean?          @default(true)
   updated_at      DateTime?         @default(now()) @db.Timestamp(6)
   created_at      DateTime?         @default(now()) @db.Timestamp(6)

@@ -1,4 +1,5 @@
 import AuditService from '../../application/services/audit.service.js';
+import RiskClassificationService from '../../application/services/riskClassification.service.js';
 import CreatePatientUseCase from '../../application/use-cases/patient/createPatient.usecase.js';
 import TogglePatientStatusUseCase from '../../application/use-cases/patient/togglePatientstatus.usecase.js';
 import UpdatePatientUseCase from '../../application/use-cases/patient/updatePatient.usecase.js';
@@ -12,8 +13,9 @@ const { NotFoundError } = await import('../../shared/errors/errors.js');
 const patientRepository = new PrismaPatientRepository();
 const auditRepository = new AuditRepository();
 const auditService = new AuditService(auditRepository);
+const riskClassificationService = new RiskClassificationService();
 
-const createRaw = new CreatePatientUseCase(patientRepository);
+const createRaw = new CreatePatientUseCase(patientRepository, riskClassificationService);
 const updateRaw = new UpdatePatientUseCase(patientRepository);
 const toggleStatusRaw = new TogglePatientStatusUseCase(patientRepository);
 

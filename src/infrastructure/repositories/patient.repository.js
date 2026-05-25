@@ -100,7 +100,7 @@ class PrismaPatientRepository extends PatientRepository {
     };
   }
 
-  async create({ name, documentNumber, birthDate, phone, email }) {
+  async create({ name, documentNumber, birthDate, phone, email, diseaseCount, riskLevel }) {
     return prisma.patients.create({
       data: {
         name,
@@ -108,12 +108,14 @@ class PrismaPatientRepository extends PatientRepository {
         birth_date: birthDate ? new Date(birthDate) : null,
         phone: phone ?? null,
         email: email ?? null,
+        disease_count: diseaseCount,
+        risk_level: riskLevel,
         is_active: true,
       },
     });
   }
 
-  async update(id, { name, birthDate, phone, email }) {
+  async update(id, { name, birthDate, phone, email, diseaseCount, riskLevel }) {
     return prisma.patients.update({
       where: { id },
       data: {
@@ -121,6 +123,8 @@ class PrismaPatientRepository extends PatientRepository {
         ...(birthDate !== undefined && { birth_date: birthDate ? new Date(birthDate) : null }),
         ...(phone !== undefined && { phone }),
         ...(email !== undefined && { email }),
+        ...(diseaseCount !== undefined && { disease_count: diseaseCount }),
+        ...(riskLevel !== undefined && { risk_level: riskLevel }),
         updated_at: new Date(),
       },
     });
