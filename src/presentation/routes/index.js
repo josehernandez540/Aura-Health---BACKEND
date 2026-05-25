@@ -8,6 +8,7 @@ import appointmentRoute from "./appointment.routes.js";
 import auditRoute from "./audit.routes.js";
 import integrationRouter from './integration.routes.js';
 import medicalRecordRouter from './medicalRecord.routes.js';
+import historyRouter from './history.routes.js';
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use('/v1/appointments', authMiddleware, appointmentRoute);
 router.use('/v1/audit', authMiddleware, auditRoute);
 router.use('/v1/medical-records', medicalRecordRouter);
 router.use('/v1/integracion', integrationRouter);
+router.use('/v1/historial', historyRouter);
 
 export default router;
