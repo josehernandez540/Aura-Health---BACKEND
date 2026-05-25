@@ -10,6 +10,7 @@ import { withAudit } from '../../shared/utils/audit-wrapper.js';
 import { AuditActions } from '../../domain/constants/audit-actions.js';
 import { NotFoundError } from '../../shared/errors/errors.js';
 import CancelAppointmentUseCase from '../../application/use-cases/appointment/cancelAppointment.usecase.js';
+import RescheduleAppointmentUseCase from '../../application/use-cases/appointment/rescheduleAppointment.usecase.js';
 import emailService from '../../infrastructure/email/email.service.js';
 
 const appointmentRepository = new PrismaAppointmentRepository();
@@ -25,6 +26,7 @@ const createRaw = new CreateAppointmentUseCase(
 );
 
 const updateStatusRaw = new UpdateAppointmentStatusUseCase(appointmentRepository);
+const rescheduleRaw = new RescheduleAppointmentUseCase(appointmentRepository, emailService);
 
 const cancelRaw = new CancelAppointmentUseCase(
   appointmentRepository,
@@ -57,6 +59,22 @@ const updateStatusUseCase = {
     getMetadata: (params) => ({
       newStatus: params.status,
       performedBy: params.performedBy,
+    }),
+  }),
+};
+
+const rescheduleUseCase = {
+  execute: withAudit(rescheduleRaw.execute.bind(rescheduleRaw), auditService, {
+    action: AuditActions.APPOINTMENT_RESCHEDULED,
+    entityType: 'APPOINTMENT',
+    getUserId: (_r, _p, ctx) => ctx?.user?.userId ?? null,
+    getEntityId: (_r, params) => params.appointmentId,
+    getMetadata: (params) => ({
+      appointmentId: params.appointmentId,
+      newDate: params.newDate,
+      newStartTime: params.newStartTime,
+      newEndTime: params.newEndTime,
+      reason: params.reason ?? null,
     }),
   }),
 };
@@ -99,6 +117,27 @@ class AppointmentController {
       });
 
       return successResponse(res, result, `Cita actualizada a estado: ${status}`);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async reschedule(req, res, next) {
+    try {
+      const { id: appointmentId } = req.params;
+      const { newDate, newStartTime, newEndTime, reason } = req.body;
+      const performedBy = req.user?.userId ?? null;
+ 
+      const result = await rescheduleUseCase.execute({
+        appointmentId,
+        newDate,
+        newStartTime,
+        newEndTime,
+        reason,
+        performedBy,
+      });
+ 
+      return successResponse(res, result, 'Cita reprogramada exitosamente');
     } catch (error) {
       next(error);
     }

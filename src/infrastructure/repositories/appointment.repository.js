@@ -32,7 +32,7 @@ class PrismaAppointmentRepository extends AppointmentRepository {
         ? { id: row.doctors.id, name: row.doctors.name, specialization: row.doctors.specialization }
         : undefined,
       patient: row.patients
-        ? { id: row.patients.id, name: row.patients.name, documentNumber: row.patients.document_number }
+        ? { id: row.patients.id, name: row.patients.name, documentNumber: row.patients.document_number, email: row.patients.email }
         : undefined,
     };
   }
@@ -66,7 +66,7 @@ class PrismaAppointmentRepository extends AppointmentRepository {
         orderBy: [{ date: 'asc' }, { start_time: 'asc' }],
         include: {
           doctors: { select: { id: true, name: true, specialization: true } },
-          patients: { select: { id: true, name: true, document_number: true } },
+          patients: { select: { id: true, name: true, document_number: true, email: true } },
         },
       }),
       prisma.appointments.count({ where }),
@@ -119,10 +119,71 @@ class PrismaAppointmentRepository extends AppointmentRepository {
         },
         include: {
           doctors: { select: { id: true, name: true, specialization: true } },
-          patients: { select: { id: true, name: true, document_number: true } },
+          patients: { select: { id: true, name: true, document_number: true, email: true } },
         },
       });
 
+      return this._mapRow(row);
+    } catch (err) {
+      if (err?.code === 'P2002') {
+        throw new ConflictError(
+          'El médico ya tiene una cita programada en ese horario. Por favor elija otro horario.'
+        );
+      }
+      throw err;
+    }
+  }
+
+  async reschedule({
+    appointmentId,
+    newDate,
+    newStartTime,
+    newEndTime,
+    reason,
+    performedBy,
+    previousDate,
+    previousStartTime,
+    previousEndTime,
+  }) {
+    const newDateObj = new Date(newDate);
+    const newStartDT = this._toDateTime(newDate, newStartTime);
+    const newEndDT = this._toDateTime(newDate, newEndTime);
+ 
+    try {
+      const row = await prisma.$transaction(async (tx) => {
+        const updated = await tx.appointments.update({
+          where: { id: appointmentId },
+          data: {
+            date: newDateObj,
+            start_time: newStartDT,
+            end_time: newEndDT,
+          },
+          include: {
+            doctors: { select: { id: true, name: true, specialization: true } },
+            patients: { select: { id: true, name: true, document_number: true, email: true } },
+          },
+        });
+ 
+        const historyAction = [
+          'RESCHEDULED',
+          `from:${previousDate}T${previousStartTime}-${previousEndTime}`,
+          `to:${newDate}T${newStartTime}-${newEndTime}`,
+          reason ? `reason:${reason}` : '',
+        ]
+          .filter(Boolean)
+          .join('|');
+ 
+        await tx.appointment_history.create({
+          data: {
+            appointment_id: appointmentId,
+            action: historyAction,
+            performed_by: performedBy ?? null,
+          },
+        });
+ 
+        return updated;
+      });
+ 
       return this._mapRow(row);
     } catch (err) {
       if (err?.code === 'P2002') {
@@ -140,7 +201,7 @@ class PrismaAppointmentRepository extends AppointmentRepository {
       data: { status },
       include: {
         doctors: { select: { id: true, name: true, specialization: true } },
-        patients: { select: { id: true, name: true, document_number: true } },
+        patients: { select: { id: true, name: true, document_number: true, email: true } },
       },
     });
 
@@ -167,7 +228,7 @@ class PrismaAppointmentRepository extends AppointmentRepository {
       },
       include: {
         doctors: { select: { id: true, name: true, specialization: true } },
-        patients: { select: { id: true, name: true, document_number: true } },
+        patients: { select: { id: true, name: true, document_number: true, email: true } },
       },
     });
 
