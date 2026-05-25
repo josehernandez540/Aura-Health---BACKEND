@@ -13,6 +13,12 @@ class PrismaMedicalRecordRepository extends MedicalRecordRepository {
       },
     });
   }
+
+  async findById(id) {
+    return prisma.medical_records.findUnique({
+      where: { id },
+    });
+  }
 }
 
 export default PrismaMedicalRecordRepository;
