@@ -242,6 +242,49 @@ class PrismaAppointmentRepository extends AppointmentRepository {
 
     return this._mapRow(row, { cancellationReason: reason, cancelledAt: now });
   }
+
+  async markAsNoShow(id, reason, performedBy) {
+    const notesValue = reason
+      ? `NO_SHOW_REASON: ${reason}`
+      : null;
+
+    const row = await prisma.appointments.update({
+      where: { id },
+      data: {
+        status: 'NO_SHOW',
+        ...(notesValue && { notes: notesValue }),
+      },
+      include: {
+        doctors: {
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+          },
+        },
+        patients: {
+          select: {
+            id: true,
+            name: true,
+            document_number: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    await prisma.appointment_history.create({
+      data: {
+        appointment_id: id,
+        action: reason
+          ? `NO_SHOW — ${reason}`
+          : 'NO_SHOW',
+        performed_by: performedBy ?? null,
+      },
+    });
+
+    return this._mapRow(row);
+  }
 }
 
 export default PrismaAppointmentRepository;

@@ -7,6 +7,7 @@ import { createAppointmentSchema } from '../middlewares/schemas/createAppointmen
 import { updateAppointmentStatusSchema } from '../middlewares/schemas/updateAppointmentStatus.schema.js';
 import { cancelAppointmentSchema } from '../middlewares/schemas/cancelAppointment.schema.js';
 import { rescheduleAppointmentSchema } from '../middlewares/schemas/rescheduleAppointment.schema.js';
+import { noShowAppointmentSchema } from '../middlewares/schemas/noShowAppointment.schema.js';
 
 const appointmentRouter = express.Router();
 
@@ -465,6 +466,14 @@ appointmentRouter.patch(
   authorizeRoles(Role.ADMIN),
   validate(updateAppointmentStatusSchema),
   (req, res, next) => appointmentController.updateStatus(req, res, next)
+);
+
+appointmentRouter.patch(
+  '/:id/no-show',
+  authorizeRoles(Role.ADMIN),
+  validate(noShowAppointmentSchema),
+  (req, res, next) =>
+    appointmentController.markNoShow(req, res, next)
 );
 
 export default appointmentRouter;

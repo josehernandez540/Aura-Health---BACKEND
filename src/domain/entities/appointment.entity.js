@@ -24,4 +24,5 @@ export class Appointment {
   isScheduled() { return this.status === 'SCHEDULED'; }
   isCancelled() { return this.status === 'CANCELLED'; }
   isCompleted() { return this.status === 'COMPLETED'; }
+  isNoShow() { return this.status === 'NO_SHOW'; }
 }
