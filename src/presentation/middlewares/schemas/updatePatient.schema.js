@@ -25,6 +25,12 @@ export const updatePatientSchema = z.object({
         .email('El correo electrónico no es válido')
         .max(255, 'El correo no puede superar los 255 caracteres')
         .optional(),
+        
+    diseaseCount: z
+        .number()
+        .int()
+        .min(0)
+        .optional(),
 }).refine(
     (data) => Object.values(data).some((v) => v !== undefined),
     { message: 'Debes proporcionar al menos un campo para actualizar' }
