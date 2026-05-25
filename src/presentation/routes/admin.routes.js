@@ -13,7 +13,7 @@ const adminUserRouter = express.Router();
 
 /**
  * @openapi
- * /v1/admin-users:
+ * /v1/admin:
  *   get:
  *     tags: [AdminUsers]
  *     summary: Listar administradores (solo ADMIN)
@@ -54,7 +54,7 @@ adminUserRouter.get(
 
 /**
  * @openapi
- * /v1/admin-users/{id}:
+ * /v1/admin/{id}:
  *   get:
  *     tags: [AdminUsers]
  *     summary: Obtener administrador por ID (solo ADMIN)
@@ -79,7 +79,7 @@ adminUserRouter.get(
 
 /**
  * @openapi
- * /v1/admin-users:
+ * /v1/admin:
  *   post:
  *     tags: [AdminUsers]
  *     summary: Crear administrador (solo ADMIN)
@@ -135,7 +135,7 @@ adminUserRouter.post(
 
 /**
  * @openapi
- * /v1/admin-users/{id}:
+ * /v1/admin/{id}:
  *   put:
  *     tags: [AdminUsers]
  *     summary: Editar administrador (solo ADMIN)
@@ -181,7 +181,7 @@ adminUserRouter.put(
 
 /**
  * @openapi
- * /v1/admin-users/{id}/status:
+ * /v1/admin/{id}/status:
  *   patch:
  *     tags: [AdminUsers]
  *     summary: Activar / Inactivar administrador (solo ADMIN)

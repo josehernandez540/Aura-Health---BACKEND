@@ -6,6 +6,7 @@ import appointmentController from '../controllers/appointment.controller.js';
 import { createAppointmentSchema } from '../middlewares/schemas/createAppointment.schema.js';
 import { updateAppointmentStatusSchema } from '../middlewares/schemas/updateAppointmentStatus.schema.js';
 import { cancelAppointmentSchema } from '../middlewares/schemas/cancelAppointment.schema.js';
+import { rescheduleAppointmentSchema } from '../middlewares/schemas/rescheduleAppointment.schema.js';
 
 const appointmentRouter = express.Router();
 
@@ -143,6 +144,200 @@ appointmentRouter.post(
   authorizeRoles(Role.ADMIN),
   validate(createAppointmentSchema),
   (req, res, next) => appointmentController.create(req, res, next)
+);
+
+
+
+/**
+ * @openapi
+ * /v1/appointments/{id}/cancel:
+ *   patch:
+ *     tags: [Appointments]
+ *     summary: Cancelar cita con motivo — exclusivo ADMIN (REQ-06)
+ *     description: >
+ *       Permite a un Administrador cancelar una cita en estado SCHEDULED.
+ *       El motivo de cancelación es **obligatorio**. Se notifica automáticamente
+ *       al paciente por email y se registra la operación en el log de auditoría
+ *       con la acción `APPOINTMENT_CANCELLED_BY_ADMIN`.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID de la cita a cancelar
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reason]
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 minLength: 10
+ *                 maxLength: 500
+ *                 example: "El médico tuvo una emergencia y no podrá atender ese día."
+ *     responses:
+ *       200:
+ *         description: Cita cancelada correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:   { type: boolean, example: true }
+ *                 message:   { type: string,  example: "Cita cancelada correctamente" }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:         { type: string, format: uuid }
+ *                     status:     { type: string, example: "CANCELLED" }
+ *                     reason:     { type: string }
+ *                     cancelledBy: { type: string, format: uuid }
+ *                     cancelledAt: { type: string, format: date-time }
+ *       400:
+ *         description: Motivo faltante / cita no está en estado SCHEDULED
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Rol insuficiente (solo ADMIN)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Cita no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+appointmentRouter.patch(
+  '/:id/cancel',
+  authorizeRoles(Role.ADMIN),
+  validate(cancelAppointmentSchema),
+  (req, res, next) => appointmentController.cancel(req, res, next)
+);
+
+/**
+ * @openapi
+ * /v1/appointments/{id}/reschedule:
+ *   patch:
+ *     tags: [Appointments]
+ *     summary: Reprogramar una cita (solo ADMIN)
+ *     description: >
+ *       Reprograma una cita SCHEDULED a una nueva fecha/hora.
+ *       Valida disponibilidad del médico, registra el cambio en appointment_history
+ *       y notifica al paciente por email.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *         description: ID de la cita a reprogramar
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [newDate, newStartTime, newEndTime]
+ *             properties:
+ *               newDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2099-12-20"
+ *                 description: Nueva fecha (no puede ser en el pasado)
+ *               newStartTime:
+ *                 type: string
+ *                 example: "10:00"
+ *                 description: Nueva hora de inicio (HH:MM 24h)
+ *               newEndTime:
+ *                 type: string
+ *                 example: "10:30"
+ *                 description: Nueva hora de fin (HH:MM 24h)
+ *               reason:
+ *                 type: string
+ *                 example: "El médico tiene una emergencia"
+ *                 description: Motivo de la reprogramación (opcional, max 500 chars)
+ *     responses:
+ *       200:
+ *         description: Cita reprogramada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: string }
+ *                     status: { type: string }
+ *                     message: { type: string }
+ *                     appointment:
+ *                       type: object
+ *                       properties:
+ *                         id: { type: string }
+ *                         date: { type: string }
+ *                         startTime: { type: string }
+ *                         endTime: { type: string }
+ *                         status: { type: string }
+ *                     previous:
+ *                       type: object
+ *                       properties:
+ *                         date: { type: string }
+ *                         startTime: { type: string }
+ *                         endTime: { type: string }
+ *                     doctor:
+ *                       type: object
+ *                     patient:
+ *                       type: object
+ *       400:
+ *         description: Datos inválidos o la cita no está en estado SCHEDULED
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: No autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Cita no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: El médico ya tiene una cita en el nuevo horario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+appointmentRouter.patch(
+  '/:id/reschedule',
+  authorizeRoles(Role.ADMIN),
+  validate(rescheduleAppointmentSchema),
+  (req, res, next) => appointmentController.reschedule(req, res, next)
 );
 
 /**
