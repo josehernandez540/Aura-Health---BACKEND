@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import fs from 'fs';
 import { NotFoundError, ValidationError } from '../../../shared/errors/errors.js';
 
 class UploadExternalMedicalRecordUseCase {
@@ -19,9 +20,11 @@ class UploadExternalMedicalRecordUseCase {
       throw new NotFoundError('Paciente no encontrado');
     }
 
+    const fileBuffer = fs.readFileSync(file.path);
+
     const fileHash = crypto
       .createHash('sha256')
-      .update(file.filename)
+      .update(fileBuffer)
       .digest('hex');
 
     const medicalRecord = await this.medicalRecordRepository.create({
@@ -35,7 +38,7 @@ class UploadExternalMedicalRecordUseCase {
       id: medicalRecord.id,
       patientId: medicalRecord.patient_id,
       source: medicalRecord.source,
-      fileUrl: medicalRecord.file_url,
+      fileUrl: `/medical-records/${medicalRecord.id}/download`,
       createdAt: medicalRecord.created_at,
     };
   }

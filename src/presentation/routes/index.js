@@ -7,6 +7,7 @@ import patientRoute from './patient.routes.js';
 import appointmentRoute from "./appointment.routes.js";
 import auditRoute from "./audit.routes.js";
 import integrationRouter from './integration.routes.js';
+import medicalRecordRouter from './medicalRecord.routes.js';
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.use('/v1/doctors', authMiddleware, doctorRoute);
 router.use('/v1/patients', authMiddleware, patientRoute);
 router.use('/v1/appointments', authMiddleware, appointmentRoute);
 router.use('/v1/audit', authMiddleware, auditRoute);
+router.use('/v1/medical-records', medicalRecordRouter);
 router.use('/v1/integracion', integrationRouter);
 
 export default router;
