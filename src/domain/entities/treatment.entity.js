@@ -7,6 +7,9 @@ export class Treatment {
     medications,
     status,
     createdAt,
+    requiresApproval,
+    approvedBy,
+    approvedAt,
   }) {
     this.id = id;
     this.patientId = patientId;
@@ -15,6 +18,9 @@ export class Treatment {
     this.medications = medications ?? [];
     this.status = status ?? 'ACTIVE';
     this.createdAt = createdAt;
+    this.requiresApproval = requiresApproval ?? false;
+    this.approvedBy = approvedBy;
+    this.approvedAt = approvedAt;
   }
 
   static isValidStatus(status) {

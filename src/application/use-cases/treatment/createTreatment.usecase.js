@@ -7,7 +7,7 @@ class CreateTreatmentUseCase {
     this.doctorRepository = doctorRepository;
   }
 
-  async execute({ patientId, description, medications, doctorId }, context = {}) {
+  async execute({ patientId, description, medications, doctorId, requiresApproval }, context = {}) {
 
 
     const patient = await this.patientRepository.findById(patientId);
@@ -19,14 +19,16 @@ class CreateTreatmentUseCase {
     if (!doctor.is_active) throw new ValidationError('El médico no está activo');
 
     const userId = doctor.user_id;
-    console.log(`User ${userId} is creating a treatment for patient ${patientId}`);
+    const status = requiresApproval ? 'PENDING_APPROVAL' : 'ACTIVE';
 
     const newTreatment = await this.treatmentRepository.create({
         patientId,
         doctorId,
         description,
         medications,
-        changedBy: userId
+        changedBy: userId,
+        requiresApproval,
+        status,
     });
 
     context.treatment = newTreatment;

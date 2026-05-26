@@ -1,5 +1,6 @@
 import prisma from '../../config/database.js';
 import TreatmentRepository from '../../domain/repositories/treatment.repository.js';
+import { Treatment } from '../../domain/entities/treatment.entity.js';
 
 class PrismaTreatmentRepository extends TreatmentRepository {
     _mapRow(row) {
@@ -21,7 +22,7 @@ class PrismaTreatmentRepository extends TreatmentRepository {
                 previousMedication: mc.previous_medication,
                 newMedication: parsedNewMed,
                 changedBy: mc.changed_by,
-                createdAt: mc.created_at
+                createdAt: mc.created_at,
             };
         });
 
@@ -29,7 +30,7 @@ class PrismaTreatmentRepository extends TreatmentRepository {
             .map(c => c.newMedication)
             .filter(med => med !== null && med !== undefined);
 
-        return {
+        const treatment = new Treatment({
             id: row.id,
             patientId: row.patient_id,
             doctorId: row.doctor_id,
@@ -37,15 +38,32 @@ class PrismaTreatmentRepository extends TreatmentRepository {
             medications,
             status: row.status,
             createdAt: row.created_at,
-            doctor: row.doctors
-                ? { id: row.doctors.id, name: row.doctors.name, specialization: row.doctors.specialization }
-                : undefined,
-            patient: row.patients
-                ? { id: row.patients.id, name: row.patients.name, documentNumber: row.patients.document_number }
-                : undefined,
-            approvals: row.treatment_approvals ?? [],
-            medicationChanges
-        };
+            requiresApproval: row.requires_approval,
+            approvedBy: row.approved_by,
+            approvedAt: row.approved_at,
+        });
+
+        treatment.doctor = row.doctors
+            ? {
+                id: row.doctors.id,
+                name: row.doctors.name,
+                specialization: row.doctors.specialization,
+            }
+            : undefined;
+
+        treatment.patient = row.patients
+            ? {
+                id: row.patients.id,
+                name: row.patients.name,
+                documentNumber: row.patients.document_number,
+            }
+            : undefined;
+
+        treatment.approvals = row.treatment_approvals ?? [];
+        treatment.medicationChanges = medicationChanges;
+
+        return treatment;
+
     }
 
     async findById(id) {
@@ -109,14 +127,15 @@ class PrismaTreatmentRepository extends TreatmentRepository {
         return this.findAll({ page, limit, patientId, status });
     }
 
-    async create({ patientId, doctorId, description, medications, changedBy }) {
+    async create({ patientId, doctorId, description, medications, changedBy, requiresApproval, status }) {
         const row = await prisma.$transaction(async (tx) => {
             const treatment = await tx.treatments.create({
                 data: {
                     patient_id: patientId,
                     doctor_id: doctorId,
                     description,
-                    status: 'ACTIVE',
+                    status,
+                    requires_approval: requiresApproval,
                 },
                 include: {
                     doctors: { select: { id: true, name: true, specialization: true } },
@@ -180,6 +199,30 @@ class PrismaTreatmentRepository extends TreatmentRepository {
             where: { id },
             data: { status },
         });
+        return this.findById(id);
+    }
+
+    async approve(id, approvedBy, notes) {
+        await prisma.$transaction(async (tx) => {
+
+            await tx.treatment_approvals.create({
+                data: {
+                    treatment_id: id,
+                    approved_by: approvedBy,
+                    notes,
+                },
+            });
+
+            await tx.treatments.update({
+                where: { id },
+                data: {
+                    status: 'ACTIVE',
+                    approved_by: approvedBy,
+                    approved_at: new Date(),
+                },
+            });
+        });
+
         return this.findById(id);
     }
 }

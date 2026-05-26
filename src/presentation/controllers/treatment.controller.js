@@ -8,6 +8,7 @@ import PrismaDoctorRepository from '../../infrastructure/repositories/doctor.rep
 import { successResponse } from '../../shared/utils/apiResponse.js';
 import { withAudit } from '../../shared/utils/audit-wrapper.js';
 import { NotFoundError } from '../../shared/errors/errors.js';
+import ApproveTreatmentUseCase from '../../application/use-cases/treatment/approveTreatment.usecase.js';
 
 const treatmentRepository = new PrismaTreatmentRepository();
 const patientRepository = new PrismaPatientRepository();
@@ -18,6 +19,7 @@ const auditService = new AuditService(auditRepository);
 const TREATMENT_ACTIONS = {
     TREATMENT_CREATED: 'TREATMENT_CREATED',
     TREATMENT_STATUS_CHANGED: 'TREATMENT_STATUS_CHANGED',
+    TREATMENT_APPROVED: 'TREATMENT_APPROVED',
 };
 
 const createRaw = new CreateTreatmentUseCase(
@@ -27,6 +29,7 @@ const createRaw = new CreateTreatmentUseCase(
 );
 
 const updateStatusRaw = new UpdateTreatmentStatusUseCase(treatmentRepository);
+const approveRaw = new ApproveTreatmentUseCase(treatmentRepository);
 
 const createUseCase = {
     execute: withAudit(createRaw.execute.bind(createRaw), auditService, {
@@ -53,10 +56,23 @@ const updateStatusUseCase = {
     }),
 };
 
+
+const approveUseCase = {
+    execute: withAudit(approveRaw.execute.bind(approveRaw), auditService, {
+        action: TREATMENT_ACTIONS.TREATMENT_APPROVED,
+        entityType: 'TREATMENT',
+        getUserId: (_r, _p, ctx) => ctx?.user?.userId ?? null,
+        getEntityId: (_r, params) => params.treatmentId,
+        getMetadata: (params) => ({
+            approvedBy: params.approvedBy,
+            notes: params.notes ?? null,
+        }),
+    }),
+};
+
 class TreatmentController {
     async create(req, res, next) {
         try {
-            console.log('Creating treatment with data:', req.body);
             const currentUserId = req.user?.userId;
             const result = await createUseCase.execute({
                 ...req.body,
@@ -118,6 +134,26 @@ class TreatmentController {
                 status,
             });
             return successResponse(res, result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async approve(req, res, next) {
+        try {
+            const { id: treatmentId } = req.params;
+
+            const result = await approveUseCase.execute({
+                treatmentId,
+                approvedBy: req.user.userId,
+                notes: req.body.notes,
+            });
+
+            return successResponse(
+                res,
+                result,
+                'Tratamiento aprobado exitosamente'
+            );
         } catch (error) {
             next(error);
         }

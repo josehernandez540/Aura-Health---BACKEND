@@ -218,4 +218,10 @@ treatmentRouter.patch(
   (req, res, next) => treatmentController.updateStatus(req, res, next)
 );
 
+treatmentRouter.patch(
+  '/:id/approve',
+  authorizeRoles(Role.ADMIN),
+  (req, res, next) => treatmentController.approve(req, res, next)
+);
+
 export default treatmentRouter;

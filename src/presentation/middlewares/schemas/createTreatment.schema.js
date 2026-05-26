@@ -51,4 +51,6 @@ export const createTreatmentSchema = z.object({
     .array(medicationSchema, { required_error: 'Los medicamentos son requeridos' })
     .min(1, 'Debe incluir al menos un medicamento')
     .max(20, 'No se pueden registrar más de 20 medicamentos por tratamiento'),
+    
+  requiresApproval: z.boolean().optional().default(false),
 });
