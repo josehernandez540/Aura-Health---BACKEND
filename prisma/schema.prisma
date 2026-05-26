@@ -166,12 +166,31 @@ model treatments {
   approved_at         DateTime?              @db.Timestamp(6)
   medication_changes  medication_changes[]
   treatment_approvals treatment_approvals[]
+  treatment_history   treatment_history[]
   doctors             doctors                @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patients            patients               @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  approved_user users? @relation("TreatmentApprovedBy", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approved_user       users?                 @relation("TreatmentApprovedBy", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patient_id], map: "idx_treatment_patient")
+}
+
+model treatment_history {
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  treatment_id         String     @db.Uuid
+  version              Int
+  previous_description String?
+  new_description      String
+  previous_medications Json?
+  new_medications      Json
+  changed_by           String     @db.Uuid
+  change_reason        String?
+  created_at           DateTime   @default(now()) @db.Timestamp(6)
+  treatments           treatments @relation(fields: [treatment_id], references: [id], onDelete: Cascade)
+  users                users      @relation(fields: [changed_by], references: [id], onDelete: NoAction)
+
+  @@unique([treatment_id, version])
+  @@index([treatment_id])
+  @@index([created_at])
 }
 
 model users {
@@ -192,6 +211,7 @@ model users {
   medication_changes   medication_changes[]
   notifications        notifications[]
   reports              reports[]
+  treatment_history    treatment_history[]
   treatment_approvals  treatment_approvals[] @relation("TreatmentApprovalUser")
   approved_treatments  treatments[]          @relation("TreatmentApprovedBy")
   roles                roles                 @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
