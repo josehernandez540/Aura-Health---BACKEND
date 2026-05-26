@@ -224,4 +224,16 @@ treatmentRouter.patch(
   (req, res, next) => treatmentController.approve(req, res, next)
 );
 
+treatmentRouter.patch(
+  '/:id',
+  authorizeRoles(Role.ADMIN, Role.DOCTOR),
+  (req, res, next) =>
+    treatmentController.update(req, res, next)
+);
+
+treatmentRouter.get(
+  '/:id/history',
+  (req, res, next) =>
+    treatmentController.history(req, res, next)
+);
 export default treatmentRouter;

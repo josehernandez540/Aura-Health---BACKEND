@@ -9,10 +9,13 @@ import { successResponse } from '../../shared/utils/apiResponse.js';
 import { withAudit } from '../../shared/utils/audit-wrapper.js';
 import { NotFoundError } from '../../shared/errors/errors.js';
 import ApproveTreatmentUseCase from '../../application/use-cases/treatment/approveTreatment.usecase.js';
+import UpdateTreatmentUseCase from '../../application/use-cases/treatment/updateTreatment.usecase.js';
+import PrismaTreatmentHistoryRepository from '../../infrastructure/repositories/treatmentHistory.repository.js';
 
 const treatmentRepository = new PrismaTreatmentRepository();
 const patientRepository = new PrismaPatientRepository();
 const doctorRepository = new PrismaDoctorRepository();
+const treatmentHistoryRepository = new PrismaTreatmentHistoryRepository();
 const auditRepository = new AuditRepository();
 const auditService = new AuditService(auditRepository);
 
@@ -30,6 +33,27 @@ const createRaw = new CreateTreatmentUseCase(
 
 const updateStatusRaw = new UpdateTreatmentStatusUseCase(treatmentRepository);
 const approveRaw = new ApproveTreatmentUseCase(treatmentRepository);
+const updateRaw = new UpdateTreatmentUseCase(
+    treatmentRepository,
+    treatmentHistoryRepository
+);
+
+const updateUseCase = {
+    execute: withAudit(updateRaw.execute.bind(updateRaw), auditService, {
+        action: 'TREATMENT_UPDATED',
+        entityType: 'TREATMENT',
+
+        getUserId: (_r, _p, ctx) =>
+            ctx?.user?.userId ?? null,
+
+        getEntityId: (_r, params) =>
+            params.treatmentId,
+
+        getMetadata: (params) => ({
+            reason: params.reason,
+        }),
+    }),
+};
 
 const createUseCase = {
     execute: withAudit(createRaw.execute.bind(createRaw), auditService, {
@@ -154,6 +178,51 @@ class TreatmentController {
                 result,
                 'Tratamiento aprobado exitosamente'
             );
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async update(req, res, next) {
+        try {
+
+            const { id: treatmentId } = req.params;
+
+            const result =
+                await updateUseCase.execute({
+                    treatmentId,
+
+                    description: req.body.description,
+
+                    medications: req.body.medications,
+
+                    reason: req.body.reason,
+
+                    changedBy: req.user.userId,
+                });
+
+            return successResponse(
+                res,
+                result,
+                'Tratamiento actualizado exitosamente'
+            );
+
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async history(req, res, next) {
+        try {
+
+            const { id } = req.params;
+
+            const history =
+                await treatmentHistoryRepository
+                    .findByTreatmentId(id);
+
+            return successResponse(res, history);
+
         } catch (error) {
             next(error);
         }
