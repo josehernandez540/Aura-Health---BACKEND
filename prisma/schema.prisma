@@ -33,7 +33,6 @@ model appointments {
   doctors             doctors                  @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patients            patients                 @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-
   @@index([doctor_id, date], map: "idx_appointment_doctor_date")
 }
 
@@ -50,18 +49,18 @@ model audit_logs {
 }
 
 model doctors {
-  id                String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id           String         @unique @db.Uuid
-  name              String
-  specialization    String?
-  license_number    String?        @unique
-  is_active         Boolean?       @default(true)
-  status_changed_by String?        @db.Uuid
-  status_changed_at DateTime?      @db.Timestamp(6)
-  appointments      appointments[]
-  users             users          @relation("DoctorUser", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  status_changed_user   users?         @relation("DoctorStatusChanger", fields: [status_changed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  treatments        treatments[]
+  id                  String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id             String         @unique @db.Uuid
+  name                String
+  specialization      String?
+  license_number      String?        @unique
+  is_active           Boolean?       @default(true)
+  status_changed_by   String?        @db.Uuid
+  status_changed_at   DateTime?      @db.Timestamp(6)
+  appointments        appointments[]
+  users               users          @relation("DoctorUser", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  status_changed_user users?         @relation("DoctorStatusChanger", fields: [status_changed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  treatments          treatments[]
 }
 
 model medical_records {
@@ -151,7 +150,7 @@ model treatment_approvals {
   approved_by  String?    @db.Uuid
   notes        String?
   approved_at  DateTime?  @default(now()) @db.Timestamp(6)
-  users        users?     @relation(fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users        users?     @relation("TreatmentApprovalUser", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   treatments   treatments @relation(fields: [treatment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -162,34 +161,40 @@ model treatments {
   description         String
   status              treatment_status_enum? @default(ACTIVE)
   created_at          DateTime?              @default(now()) @db.Timestamp(6)
+  requires_approval   Boolean                @default(false)
+  approved_by         String?                @db.Uuid
+  approved_at         DateTime?              @db.Timestamp(6)
   medication_changes  medication_changes[]
   treatment_approvals treatment_approvals[]
   doctors             doctors                @relation(fields: [doctor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patients            patients               @relation(fields: [patient_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  approved_user users? @relation("TreatmentApprovedBy", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
   @@index([patient_id], map: "idx_treatment_patient")
 }
 
 model users {
-  id                  String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  email               String                @unique
-  password            String
-  role_id             String                @db.Uuid
-  is_active           Boolean?              @default(true)
-  must_change_password   Boolean?              @default(false)
-  created_at          DateTime?             @default(now()) @db.Timestamp(6)
-  updated_at          DateTime?             @default(now()) @db.Timestamp(6)
-  appointment_history appointment_history[]
-  appointments        appointments[]
-  audit_logs          audit_logs[]
-  doctors             doctors?              @relation("DoctorUser")
-  doctors_changed     doctors[]             @relation("DoctorStatusChanger")
-  medical_records     medical_records[]
-  medication_changes  medication_changes[]
-  notifications       notifications[]
-  reports             reports[]
-  treatment_approvals treatment_approvals[]
-  roles               roles                 @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                   String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                String                @unique
+  password             String
+  role_id              String                @db.Uuid
+  is_active            Boolean?              @default(true)
+  must_change_password Boolean?              @default(false)
+  created_at           DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?             @default(now()) @db.Timestamp(6)
+  appointment_history  appointment_history[]
+  appointments         appointments[]
+  audit_logs           audit_logs[]
+  doctors              doctors?              @relation("DoctorUser")
+  doctors_changed      doctors[]             @relation("DoctorStatusChanger")
+  medical_records      medical_records[]
+  medication_changes   medication_changes[]
+  notifications        notifications[]
+  reports              reports[]
+  treatment_approvals  treatment_approvals[] @relation("TreatmentApprovalUser")
+  approved_treatments  treatments[]          @relation("TreatmentApprovedBy")
+  roles                roles                 @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 enum appointment_status_enum {
