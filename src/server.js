@@ -1,3 +1,4 @@
+import './infrastructure/schedulers/appointmentReminder.scheduler.js';
 import dotenv from 'dotenv';
 import { createApp } from './app.js';
 import { connectDB } from './config/database.js';

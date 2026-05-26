@@ -98,7 +98,11 @@ model notifications {
   entity_type String?
   entity_id   String?                   @db.Uuid
   sent_at     DateTime?                 @db.Timestamp(6)
+  created_at  DateTime?                 @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?                 @default(now()) @db.Timestamp(6)
   users       users                     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([entity_type, entity_id])
 }
 
 model patients {

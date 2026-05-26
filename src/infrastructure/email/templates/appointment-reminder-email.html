@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recordatorio de cita</title>
+  <style>
+    .container {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .header {
+      background-color: #2563eb;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+    .content {
+      padding: 32px;
+      color: #374151;
+      line-height: 1.6;
+    }
+    .appointment-box {
+      background-color: #f9fafb;
+      border: 1px solid #f3f4f6;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 24px 0;
+    }
+    .footer {
+      background-color: #f3f4f6;
+      color: #374151;
+      padding: 16px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .notice {
+      color: #374151;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin:0;">Aura Health</h1>
+    </div>
+    
+    <div class="content">
+      <h2 style="margin-top: 0;">Hola {{patientName}},</h2>
+      <p>Te recordamos que tienes una cita médica programada en nuestro sistema. A continuación, encontrarás los detalles de tu próximo encuentro:</p>
+      
+      <div class="appointment-box">
+        <p style="margin: 5px 0;"><strong>Médico:</strong> {{doctorName}}</p>
+        <p style="margin: 5px 0;"><strong>Horario:</strong> {{appointmentLabel}}</p>
+      </div>
+
+      <p class="notice">Si necesitas reprogramar o cancelar tu cita, por favor hazlo con anticipación desde tu portal de paciente.</p>
+    </div>
+    
+    <div class="footer">
+      &copy; 2026 Aura Health — Transformando la gestión médica.
+    </div>
+  </div>
+</body>
+</html>
