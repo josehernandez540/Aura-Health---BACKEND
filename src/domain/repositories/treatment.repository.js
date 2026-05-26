@@ -22,6 +22,10 @@ class TreatmentRepository {
   async updateStatus(id, status) {
     throw new Error('Method not implemented');
   }
+  
+  async approve(id, approvedBy, notes) {
+    throw new Error('Method not implemented');
+  }
 }
 
 export default TreatmentRepository;
