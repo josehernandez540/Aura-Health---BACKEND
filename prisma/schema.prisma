@@ -173,6 +173,8 @@ model treatments {
 
   approved_user users? @relation("TreatmentApprovedBy", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  approved_user users? @relation("TreatmentApprovedBy", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
   @@index([patient_id], map: "idx_treatment_patient")
 }
 
