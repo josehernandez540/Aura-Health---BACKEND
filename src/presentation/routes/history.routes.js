@@ -9,7 +9,7 @@ const historyRouter = express.Router();
 historyRouter.get(
   '/:patientId',
   authMiddleware,
-  authorizeRoles(Role.DOCTOR),
+  authorizeRoles(Role.DOCTOR, Role.ADMIN),
   (req, res, next) =>
     historyController.findByPatient(req, res, next)
 );
