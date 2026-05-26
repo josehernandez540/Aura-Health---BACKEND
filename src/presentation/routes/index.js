@@ -10,7 +10,7 @@ import integrationRouter from './integration.routes.js';
 import medicalRecordRouter from './medicalRecord.routes.js';
 import historyRouter from './history.routes.js';
 import treatmentRoute from "./treatment.routes.js";
-
+import reminderRouter from './reminder.routes.js';
 const router = Router();
 
 router.use("/v1/auth", authRoute);
@@ -30,5 +30,6 @@ router.use('/v1/medical-records', medicalRecordRouter);
 router.use('/v1/integracion', integrationRouter);
 router.use('/v1/historial', authMiddleware, historyRouter);
 router.use('/v1/treatments', authMiddleware, treatmentRoute);
+router.use('/v1/reminders', reminderRouter);
 
 export default router;

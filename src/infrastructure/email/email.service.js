@@ -153,15 +153,15 @@ class EmailService {
 
       const html = rawTemplate
         ? this._replacePlaceholders(rawTemplate, {
-            patientName,
-            date,
-            startTime,
-            endTime,
-            doctorName,
-            specialization:
-              specialization ?? 'No especificada',
-            reason,
-          })
+          patientName,
+          date,
+          startTime,
+          endTime,
+          doctorName,
+          specialization:
+            specialization ?? 'No especificada',
+          reason,
+        })
         : `
           <p>
             Hola ${patientName},
@@ -238,12 +238,12 @@ class EmailService {
 
       const html = rawTemplate
         ? this._replacePlaceholders(rawTemplate, {
-            patientName,
-            doctorName,
-            previousAppointment,
-            newAppointment,
-            reason: reason ?? 'No especificado',
-          })
+          patientName,
+          doctorName,
+          previousAppointment,
+          newAppointment,
+          reason: reason ?? 'No especificado',
+        })
         : `
           <p>
             Hola ${patientName},
@@ -286,6 +286,74 @@ class EmailService {
       throw error;
     }
   }
+
+  async sendAppointmentReminderEmail({
+    to,
+    patientName,
+    doctorName,
+    date,
+    startTime,
+    endTime,
+  }) {
+    try {
+      const { transport, from } = await this._getEmailConfig();
+
+      const appointmentLabel =
+        this._buildAppointmentLabel(
+          date,
+          startTime,
+          endTime
+        );
+
+      const rawTemplate = await this._loadTemplate(
+        'appointment-reminder-email.html'
+      );
+
+      const html = rawTemplate
+        ? this._replacePlaceholders(rawTemplate, {
+          patientName,
+          doctorName,
+          appointmentLabel,
+        })
+        : `
+        <p>
+          Hola ${patientName},
+          tienes una cita programada mañana.
+        </p>
+      `;
+
+      const text = [
+        `Hola ${patientName},`,
+        '',
+        'Te recordamos tu cita médica programada.',
+        '',
+        `Médico: ${doctorName}`,
+        `Horario: ${appointmentLabel}`,
+        '',
+        'Aura Health',
+      ].join('\n');
+
+      const info = await transport.sendMail({
+        from,
+        to,
+        subject: 'Aura Health — Recordatorio de cita',
+        text,
+        html,
+      });
+
+      this._logPreview(info, 'Reminder email');
+
+      return info;
+    } catch (error) {
+      this._logError(
+        'enviando email recordatorio',
+        error
+      );
+
+      throw error;
+    }
+  }
+
 }
 
 export default new EmailService();

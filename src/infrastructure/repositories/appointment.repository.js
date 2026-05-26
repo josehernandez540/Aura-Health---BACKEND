@@ -285,6 +285,38 @@ class PrismaAppointmentRepository extends AppointmentRepository {
 
     return this._mapRow(row);
   }
+
+  async findAppointmentsForReminder( startWindow, endWindow ) {
+
+    const startTime =
+      startWindow.toTimeString().split(' ')[0];
+
+    const endTime =
+      endWindow.toTimeString().split(' ')[0];
+
+    return prisma.appointments.findMany({
+      where: {
+        status: 'SCHEDULED',
+
+        date: {
+          equals: new Date(
+            new Date().toISOString().split('T')[0]
+          ),
+        },
+
+        start_time: {
+          gte: new Date(`1970-01-01T${startTime}`),
+
+          lte: new Date(`1970-01-01T${endTime}`),
+        },
+      },
+
+      include: {
+        patients: true,
+        doctors: true,
+      },
+    });
+  }
 }
 
 export default PrismaAppointmentRepository;
