@@ -28,7 +28,7 @@ router.use('/v1/appointments', authMiddleware, appointmentRoute);
 router.use('/v1/audit', authMiddleware, auditRoute);
 router.use('/v1/medical-records', medicalRecordRouter);
 router.use('/v1/integracion', integrationRouter);
-router.use('/v1/historial', historyRouter);
+router.use('/v1/historial', authMiddleware, historyRouter);
 router.use('/v1/treatments', authMiddleware, treatmentRoute);
 
 export default router;
