@@ -1,4 +1,5 @@
 import appointmentReminderService from '../../application/services/appointmentReminder.service.js';
+import dailyAgendaService from '../../application/services/dailyAgenda.service.js';
 
 class ReminderController {
   async runAppointmentReminders(req, res, next) {

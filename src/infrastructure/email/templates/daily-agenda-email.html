@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agenda diaria</title>
+  <style>
+    .container {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .header {
+      background-color: #2563eb;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+    .content {
+      padding: 32px;
+      color: #374151;
+      line-height: 1.6;
+    }
+    .agenda-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      font-size: 14px;
+    }
+    .agenda-table th {
+      background-color: #f3f4f6;
+      color: #1f2937;
+      font-weight: 600;
+      text-align: left;
+      padding: 12px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .agenda-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      color: #4b5563;
+      vertical-align: top;
+    }
+    .agenda-table tr:last-child td {
+      border-bottom: none;
+    }
+    .footer {
+      background-color: #f3f4f6;
+      color: #374151;
+      padding: 16px;
+      text-align: center;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin:0;">Aura Health</h1>
+    </div>
+
+    <div class="content">
+      <h2 style="margin-top: 0;">Agenda diaria</h2>
+      <p>Hola Dr(a). {{doctorName}},</p>
+      <p>Estas son sus consultas programadas para hoy:</p>
+
+      <table class="agenda-table">
+        <thead>
+          <tr>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Paciente</th>
+            <th>Notas</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{appointments}}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      &copy; 2026 Aura Health — Transformando la gestión médica.
+    </div>
+  </div>
+</body>
+</html>
