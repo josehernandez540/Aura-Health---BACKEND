@@ -354,6 +354,106 @@ class EmailService {
     }
   }
 
+  async sendDailyAgendaEmail({
+    to,
+    doctorName,
+    appointments,
+  }) {
+    try {
+      const { transport, from } = await this._getEmailConfig();
+
+      const rawTemplate = await this._loadTemplate(
+        'daily-agenda-email.html'
+      );
+
+      // Mapeo adaptado al nuevo diseño limpio de filas
+      const appointmentsHtml = appointments.map(
+        (appointment) => `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${appointment.startTime}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${appointment.endTime}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>${appointment.patientName}</strong></td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">${appointment.notes ?? '-'}</td>
+        </tr>
+      `
+      ).join('');
+
+      // HTML dinámico que replica la estructura exacta del template por si falla la carga en disco
+      const html = rawTemplate
+        ? this._replacePlaceholders(rawTemplate, {
+            doctorName,
+            appointments: appointmentsHtml,
+          })
+        : `
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="UTF-8" />
+            <style>
+              .container { font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+              .header { background-color: #2563eb; color: white; padding: 24px; text-align: center; }
+              .content { padding: 32px; color: #374151; line-height: 1.6; }
+              .agenda-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px; }
+              .agenda-table th { background-color: #f3f4f6; color: #1f2937; padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb; }
+              .footer { background-color: #f3f4f6; color: #374151; padding: 16px; text-align: center; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header"><h1 style="margin:0;">Aura Health</h1></div>
+              <div class="content">
+                <h2 style="margin-top:0;">Agenda diaria</h2>
+                <p>Hola Dr(a). ${doctorName},</p>
+                <p>Estas son sus consultas programadas para hoy:</p>
+                <table class="agenda-table">
+                  <thead>
+                    <tr><th>Inicio</th><th>Fin</th><th>Paciente</th><th>Notas</th></tr>
+                  </thead>
+                  <tbody>
+                    ${appointmentsHtml}
+                  </tbody>
+                </table>
+              </div>
+              <div class="footer">&copy; 2026 Aura Health — Transformando la gestión médica.</div>
+            </div>
+          </body>
+          </html>
+        `;
+
+      const text = [
+        `Hola Dr(a). ${doctorName},`,
+        '',
+        'Estas son sus consultas programadas para hoy:',
+        '',
+        ...appointments.map(
+          (appointment) =>
+            `* ${appointment.startTime} - ${appointment.endTime} | ${appointment.patientName} ${appointment.notes ? `(Notas: ${appointment.notes})` : ''}`
+        ),
+        '',
+        '© 2026 Aura Health — Transformando la gestión médica.'
+      ].join('\n');
+
+      const info = await transport.sendMail({
+        from,
+        to,
+        subject: 'Aura Health — Agenda diaria',
+        text,
+        html,
+      });
+
+      this._logPreview(info, 'Daily agenda email');
+
+      return info;
+
+    } catch (error) {
+      this._logError(
+        'enviando agenda diaria',
+        error
+      );
+      throw error;
+    }
+  }
+
 }
 
 export default new EmailService();

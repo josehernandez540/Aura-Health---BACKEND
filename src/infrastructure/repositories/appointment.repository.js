@@ -148,7 +148,7 @@ class PrismaAppointmentRepository extends AppointmentRepository {
     const newDateObj = new Date(newDate);
     const newStartDT = this._toDateTime(newDate, newStartTime);
     const newEndDT = this._toDateTime(newDate, newEndTime);
- 
+
     try {
       const row = await prisma.$transaction(async (tx) => {
         const updated = await tx.appointments.update({
@@ -163,7 +163,7 @@ class PrismaAppointmentRepository extends AppointmentRepository {
             patients: { select: { id: true, name: true, document_number: true, email: true } },
           },
         });
- 
+
         const historyAction = [
           'RESCHEDULED',
           `from:${previousDate}T${previousStartTime}-${previousEndTime}`,
@@ -172,7 +172,7 @@ class PrismaAppointmentRepository extends AppointmentRepository {
         ]
           .filter(Boolean)
           .join('|');
- 
+
         await tx.appointment_history.create({
           data: {
             appointment_id: appointmentId,
@@ -180,10 +180,10 @@ class PrismaAppointmentRepository extends AppointmentRepository {
             performed_by: performedBy ?? null,
           },
         });
- 
+
         return updated;
       });
- 
+
       return this._mapRow(row);
     } catch (err) {
       if (err?.code === 'P2002') {
@@ -286,7 +286,7 @@ class PrismaAppointmentRepository extends AppointmentRepository {
     return this._mapRow(row);
   }
 
-  async findAppointmentsForReminder( startWindow, endWindow ) {
+  async findAppointmentsForReminder(startWindow, endWindow) {
 
     const startTime =
       startWindow.toTimeString().split(' ')[0];
@@ -315,6 +315,45 @@ class PrismaAppointmentRepository extends AppointmentRepository {
         patients: true,
         doctors: true,
       },
+    });
+  }
+
+  async findDailyAgendaByDate(date) {
+    return prisma.appointments.findMany({
+      where: {
+        status: 'SCHEDULED',
+
+        date: {
+          equals: new Date(date),
+        },
+      },
+
+      include: {
+        patients: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+
+        doctors: {
+          include: {
+            users: {
+              select: {
+                id: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+
+      orderBy: [
+        {
+          start_time: 'asc',
+        },
+      ],
     });
   }
 }
