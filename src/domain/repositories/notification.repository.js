@@ -14,6 +14,26 @@ class NotificationRepository {
   async markAsFailed(id) {
     throw new Error('Method not implemented');
   }
+
+  async findByUser(userId, { page, limit } = {}) {
+    throw new Error('Method not implemented');
+  }
+
+  async findNewerThan(userId, since) {
+    throw new Error('Method not implemented');
+  }
+
+  async countUnread(userId) {
+    throw new Error('Method not implemented');
+  }
+
+  async markAsRead(id, userId) {
+    throw new Error('Method not implemented');
+  }
+
+  async markAllAsRead(userId) {
+    throw new Error('Method not implemented');
+  }
 }
 
 export default NotificationRepository;

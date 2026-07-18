@@ -12,6 +12,7 @@ import historyRouter from './history.routes.js';
 import treatmentRoute from "./treatment.routes.js";
 import reminderRouter from './reminder.routes.js';
 import reportRoutes from './report.routes.js';
+import notificationRouter from './notification.routes.js';
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.use('/v1/historial', authMiddleware, historyRouter);
 router.use('/v1/treatments', authMiddleware, treatmentRoute);
 router.use('/v1/reminders', reminderRouter);
 router.use('/v1/reportes', authMiddleware, reportRoutes);
+router.use('/v1/notifications', notificationRouter);
 
 export default router;
