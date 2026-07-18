@@ -7,7 +7,7 @@ import PrismaPatientRepository from '../../infrastructure/repositories/patient.r
 import PrismaDoctorRepository from '../../infrastructure/repositories/doctor.repository.js';
 import { successResponse } from '../../shared/utils/apiResponse.js';
 import { withAudit } from '../../shared/utils/audit-wrapper.js';
-import { NotFoundError } from '../../shared/errors/errors.js';
+import { NotFoundError, AuthorizationError } from '../../shared/errors/errors.js';
 import ApproveTreatmentUseCase from '../../application/use-cases/treatment/approveTreatment.usecase.js';
 import UpdateTreatmentUseCase from '../../application/use-cases/treatment/updateTreatment.usecase.js';
 import PrismaTreatmentHistoryRepository from '../../infrastructure/repositories/treatmentHistory.repository.js';
@@ -98,8 +98,15 @@ class TreatmentController {
     async create(req, res, next) {
         try {
             const currentUserId = req.user?.userId;
+            const doctor = await doctorRepository.findByUserId(currentUserId);
+
+            if (!doctor) {
+                throw new AuthorizationError('No se encontró un perfil de médico asociado a este usuario');
+            }
+
             const result = await createUseCase.execute({
                 ...req.body,
+                doctorId: doctor.id,
                 currentUserId
             });
             return successResponse(res, result, 'Tratamiento creado exitosamente');
@@ -112,6 +119,19 @@ class TreatmentController {
         try {
             const { id: treatmentId } = req.params;
             const { status } = req.body;
+
+            if (req.user?.role === 'DOCTOR') {
+                const existing = await treatmentRepository.findById(treatmentId);
+                if (!existing) {
+                    return next(new NotFoundError(`Tratamiento con id ${treatmentId} no encontrado`));
+                }
+
+                const doctor = await doctorRepository.findByUserId(req.user.userId);
+                if (!doctor || existing.doctorId !== doctor.id) {
+                    return next(new NotFoundError(`Tratamiento con id ${treatmentId} no encontrado`));
+                }
+            }
+
             const result = await updateStatusUseCase.execute({ treatmentId, status });
             return successResponse(res, result, `Tratamiento actualizado a estado: ${status}`);
         } catch (error) {
@@ -126,6 +146,14 @@ class TreatmentController {
             if (!treatment) {
                 return next(new NotFoundError(`Tratamiento con id ${id} no encontrado`));
             }
+
+            if (req.user?.role === 'DOCTOR') {
+                const doctor = await doctorRepository.findByUserId(req.user.userId);
+                if (!doctor || treatment.doctorId !== doctor.id) {
+                    return next(new NotFoundError(`Tratamiento con id ${id} no encontrado`));
+                }
+            }
+
             return successResponse(res, treatment);
         } catch (error) {
             next(error);
@@ -135,11 +163,24 @@ class TreatmentController {
     async findAll(req, res, next) {
         try {
             const { page = 1, limit = 20, patientId, doctorId, status } = req.query;
+
+            let scopedDoctorId = doctorId;
+
+            if (req.user?.role === 'DOCTOR') {
+                const doctor = await doctorRepository.findByUserId(req.user.userId);
+
+                if (!doctor) {
+                    return successResponse(res, { items: [], total: 0, page: Number(page), limit: Number(limit), totalPages: 0 });
+                }
+
+                scopedDoctorId = doctor.id;
+            }
+
             const result = await treatmentRepository.findAll({
                 page: Number(page),
                 limit: Math.min(Number(limit), 100),
                 patientId,
-                doctorId,
+                doctorId: scopedDoctorId,
                 status,
             });
             return successResponse(res, result);
@@ -188,6 +229,18 @@ class TreatmentController {
 
             const { id: treatmentId } = req.params;
 
+            if (req.user?.role === 'DOCTOR') {
+                const existing = await treatmentRepository.findById(treatmentId);
+                if (!existing) {
+                    return next(new NotFoundError(`Tratamiento con id ${treatmentId} no encontrado`));
+                }
+
+                const doctor = await doctorRepository.findByUserId(req.user.userId);
+                if (!doctor || existing.doctorId !== doctor.id) {
+                    return next(new NotFoundError(`Tratamiento con id ${treatmentId} no encontrado`));
+                }
+            }
+
             const result =
                 await updateUseCase.execute({
                     treatmentId,
@@ -216,6 +269,18 @@ class TreatmentController {
         try {
 
             const { id } = req.params;
+
+            if (req.user?.role === 'DOCTOR') {
+                const existing = await treatmentRepository.findById(id);
+                if (!existing) {
+                    return next(new NotFoundError(`Tratamiento con id ${id} no encontrado`));
+                }
+
+                const doctor = await doctorRepository.findByUserId(req.user.userId);
+                if (!doctor || existing.doctorId !== doctor.id) {
+                    return next(new NotFoundError(`Tratamiento con id ${id} no encontrado`));
+                }
+            }
 
             const history =
                 await treatmentHistoryRepository

@@ -14,7 +14,8 @@ class PrismaTreatmentRepository extends TreatmentRepository {
                     ? JSON.parse(mc.new_medication)
                     : mc.new_medication;
             } catch (e) {
-                parsedNewMed = mc.new_medication;
+                // Legacy free-text entry (e.g. "Losartán 50mg") instead of a structured {name, dose} object
+                parsedNewMed = mc.new_medication ? { name: mc.new_medication, dose: '' } : null;
             }
 
             return {
@@ -26,9 +27,13 @@ class PrismaTreatmentRepository extends TreatmentRepository {
             };
         });
 
-        const medications = medicationChanges
-            .map(c => c.newMedication)
-            .filter(med => med !== null && med !== undefined);
+        const latestVersion = (row.treatment_history ?? [])[0];
+
+        const medications = latestVersion
+            ? latestVersion.new_medications
+            : medicationChanges
+                .map(c => c.newMedication)
+                .filter(med => med !== null && med !== undefined);
 
         const treatment = new Treatment({
             id: row.id,
@@ -86,6 +91,11 @@ class PrismaTreatmentRepository extends TreatmentRepository {
                     },
                     orderBy: { created_at: 'asc' },
                 },
+                treatment_history: {
+                    select: { new_medications: true },
+                    orderBy: { version: 'desc' },
+                    take: 1,
+                },
             },
         });
         return this._mapRow(row);
@@ -109,6 +119,15 @@ class PrismaTreatmentRepository extends TreatmentRepository {
                 include: {
                     doctors: { select: { id: true, name: true, specialization: true } },
                     patients: { select: { id: true, name: true, document_number: true } },
+                    medication_changes: {
+                        select: { new_medication: true },
+                        orderBy: { created_at: 'asc' },
+                    },
+                    treatment_history: {
+                        select: { new_medications: true },
+                        orderBy: { version: 'desc' },
+                        take: 1,
+                    },
                 },
             }),
             prisma.treatments.count({ where }),

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const medicationSchema = z.object({
+export const medicationSchema = z.object({
   name: z
     .string({ required_error: 'El nombre del medicamento es requerido' })
     .trim()
@@ -36,10 +36,6 @@ export const createTreatmentSchema = z.object({
   patientId: z
     .string({ required_error: 'El paciente es requerido' })
     .uuid('El id del paciente debe ser un UUID válido'),
-
-  doctorId: z
-    .string({ required_error: 'El médico es requerido' })
-    .uuid('El id del médico debe ser un UUID válido'),
 
   description: z
     .string({ required_error: 'La descripción del tratamiento es requerida' })

@@ -5,6 +5,7 @@ import { Role } from '../../domain/entities/role.enum.js';
 import treatmentController from '../controllers/treatment.controller.js';
 import { createTreatmentSchema } from '../middlewares/schemas/createTreatment.schema.js';
 import { updateTreatmentStatusSchema } from '../middlewares/schemas/updateTreatmentStatus.schema.js';
+import { updateTreatmentSchema } from '../middlewares/schemas/updateTreatment.schema.js';
 
 const treatmentRouter = express.Router();
 
@@ -227,12 +228,14 @@ treatmentRouter.patch(
 treatmentRouter.patch(
   '/:id',
   authorizeRoles(Role.ADMIN, Role.DOCTOR),
+  validate(updateTreatmentSchema),
   (req, res, next) =>
     treatmentController.update(req, res, next)
 );
 
 treatmentRouter.get(
   '/:id/history',
+  authorizeRoles(Role.ADMIN, Role.DOCTOR),
   (req, res, next) =>
     treatmentController.history(req, res, next)
 );
