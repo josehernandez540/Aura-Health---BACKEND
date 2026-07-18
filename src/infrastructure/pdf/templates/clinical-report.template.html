@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+
+  <style>
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #374151;
+      padding: 40px;
+    }
+
+    .header {
+      background: #2563eb;
+      color: white;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 32px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      opacity: 0.9;
+    }
+
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      color: #111827;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 8px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: #f9fafb;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #6b7280;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-size: 15px;
+      color: #111827;
+      font-weight: 500;
+    }
+
+    .treatment {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .treatment-title {
+      font-size: 18px;
+      color: #2563eb;
+      margin-bottom: 12px;
+    }
+
+    .medication-list {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="header">
+    <h1 class="title">
+      Aura Health
+    </h1>
+
+    <div class="subtitle">
+      Reporte Clínico del Paciente
+    </div>
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Información del paciente
+    </div>
+
+    <div class="info-grid">
+
+      <div class="card">
+        <div class="label">Nombre</div>
+        <div class="value">{{patientName}}</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Documento</div>
+        <div class="value">{{documentNumber}}</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Correo</div>
+        <div class="value">{{email}}</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Teléfono</div>
+        <div class="value">{{phone}}</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Tratamientos
+    </div>
+
+    {{treatments}}
+
+  </div>
+
+  <div class="footer">
+    © 2026 Aura Health — Transformando la gestión médica.
+  </div>
+
+</body>
+</html>

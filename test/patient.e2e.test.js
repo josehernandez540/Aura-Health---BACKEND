@@ -57,12 +57,12 @@ describe('REQ-03 – Authorization', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('should reject DOCTOR role for patient creation (401)', async () => {
+  it('should reject DOCTOR role for patient creation (403)', async () => {
     const res = await request(app)
       .post('/api/v1/patients')
       .set('Authorization', `Bearer ${doctorToken}`)
       .send({ name: 'Test', documentNumber: '99999' });
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(403);
   });
 });
 

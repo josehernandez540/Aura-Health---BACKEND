@@ -38,7 +38,7 @@ const patientRouter = express.Router();
  *       403:
  *         description: Rol insuficiente
  */
-patientRouter.get('/', authorizeRoles(Role.ADMIN), (req, res, next) =>
+patientRouter.get('/', authorizeRoles(Role.ADMIN, Role.DOCTOR), (req, res, next) =>
   patientController.findAll(req, res, next)
 );
 
@@ -61,7 +61,7 @@ patientRouter.get('/', authorizeRoles(Role.ADMIN), (req, res, next) =>
  *       404:
  *         description: Paciente no encontrado
  */
-patientRouter.get('/:id', authorizeRoles(Role.ADMIN), (req, res, next) =>
+patientRouter.get('/:id', authorizeRoles(Role.ADMIN, Role.DOCTOR), (req, res, next) =>
   patientController.findById(req, res, next)
 );
 

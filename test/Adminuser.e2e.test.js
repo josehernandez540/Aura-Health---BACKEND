@@ -54,11 +54,11 @@ describe('Admin Users – Authorization', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('should reject DOCTOR role (401)', async () => {
+  it('should reject DOCTOR role (403)', async () => {
     const res = await request(app)
       .get('/api/v1/admin')
       .set('Authorization', `Bearer ${doctorToken}`);
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(403);
   });
 });
 
@@ -137,13 +137,13 @@ describe('Admin Users – Create', () => {
     expect(res.statusCode).toBe(400);
   });
 
-  it('should reject DOCTOR role creating admin (401)', async () => {
+  it('should reject DOCTOR role creating admin (403)', async () => {
     const res = await request(app)
       .post('/api/v1/admin')
       .set('Authorization', `Bearer ${doctorToken}`)
       .send({ email: 'hacker@aura.com', name: 'Hacker' });
 
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(403);
   });
 });
 

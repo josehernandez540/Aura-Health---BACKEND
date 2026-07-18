@@ -5,18 +5,20 @@ import TogglePatientStatusUseCase from '../../application/use-cases/patient/togg
 import UpdatePatientUseCase from '../../application/use-cases/patient/updatePatient.usecase.js';
 import AuditRepository from '../../infrastructure/repositories/audit.repository.js';
 import PrismaPatientRepository from '../../infrastructure/repositories/patient.repository.js';
+import PrismaDoctorRepository from '../../infrastructure/repositories/doctor.repository.js';
 import { successResponse } from '../../shared/utils/apiResponse.js';
 import { withAudit } from '../../shared/utils/audit-wrapper.js';
 const { NotFoundError } = await import('../../shared/errors/errors.js');
 
 
 const patientRepository = new PrismaPatientRepository();
+const doctorRepository = new PrismaDoctorRepository();
 const auditRepository = new AuditRepository();
 const auditService = new AuditService(auditRepository);
 const riskClassificationService = new RiskClassificationService();
 
 const createRaw = new CreatePatientUseCase(patientRepository, riskClassificationService);
-const updateRaw = new UpdatePatientUseCase(patientRepository);
+const updateRaw = new UpdatePatientUseCase(patientRepository, riskClassificationService);
 const toggleStatusRaw = new TogglePatientStatusUseCase(patientRepository);
 
 const PATIENT_ACTIONS = {
@@ -98,11 +100,24 @@ class PatientController {
         onlyActive,
       } = req.query;
 
+      let doctorId;
+
+      if (req.user?.role === 'DOCTOR') {
+        const doctor = await doctorRepository.findByUserId(req.user.userId);
+
+        if (!doctor) {
+          return successResponse(res, { items: [], total: 0, page: Number(page), limit: Number(limit), totalPages: 0 });
+        }
+
+        doctorId = doctor.id;
+      }
+
       const result = await patientRepository.findAll({
         page: Number(page),
         limit: Math.min(Number(limit), 100),
         search,
         onlyActive: onlyActive === 'true',
+        doctorId,
       });
 
       return successResponse(res, result);
@@ -118,6 +133,15 @@ class PatientController {
 
       if (!patient) {
         return next(new NotFoundError(`Paciente con id ${id} no encontrado`));
+      }
+
+      if (req.user?.role === 'DOCTOR') {
+        const doctor = await doctorRepository.findByUserId(req.user.userId);
+        const assigned = doctor && (await patientRepository.isAssignedToDoctor(id, doctor.id));
+
+        if (!assigned) {
+          return next(new NotFoundError(`Paciente con id ${id} no encontrado`));
+        }
       }
 
       return successResponse(res, patient);

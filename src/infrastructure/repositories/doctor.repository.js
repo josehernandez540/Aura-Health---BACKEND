@@ -15,6 +15,12 @@ class PrismaDoctorRepository extends DoctorRepository {
     });
   }
 
+  async findByUserId(userId) {
+    return prisma.doctors.findUnique({
+      where: { user_id: userId },
+    });
+  }
+
   async findAll({ page = 1, limit = 20 } = {}) {
     const skip = (page - 1) * limit;
     const [items, total] = await Promise.all([

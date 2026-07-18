@@ -9,14 +9,18 @@ class PrismaPatientRepository extends PatientRepository {
   }
 
   async findById(id) {
-    return prisma.patients.findUnique({
+    const patient = await prisma.patients.findUnique({
       where: { id },
       include: {
         appointments: {
           orderBy: { date: 'desc' },
           include: {
             doctors: {
-              select: { id: true, name: true, specialization: true },
+              select: {
+                id: true,
+                name: true,
+                specialization: true,
+              },
             },
             appointment_history: {
               orderBy: { created_at: 'asc' },
@@ -27,7 +31,10 @@ class PrismaPatientRepository extends PatientRepository {
           orderBy: { created_at: 'desc' },
           include: {
             users: {
-              select: { id: true, email: true },
+              select: {
+                id: true,
+                email: true,
+              },
             },
             risk_classifications: true,
           },
@@ -36,31 +43,54 @@ class PrismaPatientRepository extends PatientRepository {
           orderBy: { created_at: 'desc' },
           include: {
             doctors: {
-              select: { id: true, name: true, specialization: true },
+              select: {
+                id: true,
+                name: true,
+                specialization: true,
+              },
             },
             medication_changes: {
               orderBy: { created_at: 'asc' },
               include: {
-                users: { select: { id: true, email: true } },
+                users: {
+                  select: {
+                    id: true,
+                    email: true,
+                  },
+                },
               },
             },
             treatment_approvals: {
               orderBy: { approved_at: 'desc' },
               include: {
-                users: { select: { id: true, email: true } },
+                users: {
+                  select: {
+                    id: true,
+                    email: true,
+                  },
+                },
               },
             },
           },
         },
       },
     });
+
+    if (!patient) return null;
+
+    return {
+      ...patient,
+      diseaseCount: patient.disease_count,
+      riskLevel: patient.risk_level,
+    };
   }
 
-  async findAll({ page = 1, limit = 20, search = '', onlyActive = false } = {}) {
+  async findAll({ page = 1, limit = 20, search = '', onlyActive = false, doctorId } = {}) {
     const skip = (page - 1) * limit;
 
     const where = {
       ...(onlyActive && { is_active: true }),
+      ...(doctorId && { appointments: { some: { doctor_id: doctorId } } }),
       ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
@@ -83,6 +113,8 @@ class PrismaPatientRepository extends PatientRepository {
           birth_date: true,
           phone: true,
           email: true,
+          disease_count: true,
+          risk_level: true,
           is_active: true,
           created_at: true,
           updated_at: true,
@@ -91,13 +123,36 @@ class PrismaPatientRepository extends PatientRepository {
       prisma.patients.count({ where }),
     ]);
 
+    const mappedItems = items.map(patient => ({
+      id: patient.id,
+      name: patient.name,
+      document_number: patient.document_number,
+      birth_date: patient.birth_date,
+      phone: patient.phone,
+      email: patient.email,
+      diseaseCount: patient.disease_count,
+      riskLevel: patient.risk_level,
+      is_active: patient.is_active,
+      created_at: patient.created_at,
+      updated_at: patient.updated_at,
+    }));
+
     return {
-      items,
+      items: mappedItems,
       total,
       page,
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  async isAssignedToDoctor(patientId, doctorId) {
+    const appointment = await prisma.appointments.findFirst({
+      where: { patient_id: patientId, doctor_id: doctorId },
+      select: { id: true },
+    });
+
+    return !!appointment;
   }
 
   async create({ name, documentNumber, birthDate, phone, email, diseaseCount, riskLevel }) {

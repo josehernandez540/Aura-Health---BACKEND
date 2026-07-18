@@ -105,7 +105,7 @@ describe('REQ-02 – Authorization', () => {
       .set('Authorization', `Bearer ${doctorToken}`)
       .send({ status: 'INACTIVE' });
 
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(403);
   });
 
 });

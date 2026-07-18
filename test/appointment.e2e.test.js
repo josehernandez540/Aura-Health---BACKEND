@@ -96,13 +96,13 @@ describe('REQ-04 – Authorization', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('should reject DOCTOR role for appointment creation (401)', async () => {
+  it('should reject DOCTOR role for appointment creation (403)', async () => {
     const res = await request(app)
       .post('/api/v1/appointments')
       .set('Authorization', `Bearer ${doctorToken}`)
       .send({ doctorId, patientId, date: FUTURE_DATE, startTime: START_TIME, endTime: END_TIME });
 
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(403);
   });
 
   it('should allow ADMIN to list appointments', async () => {

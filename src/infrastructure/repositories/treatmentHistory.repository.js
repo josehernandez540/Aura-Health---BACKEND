@@ -7,7 +7,7 @@ class PrismaTreatmentHistoryRepository extends TreatmentHistoryRepository {
   _map(row) {
     if (!row) return null;
 
-    return new TreatmentHistory({
+    const history = new TreatmentHistory({
       id: row.id,
       treatmentId: row.treatment_id,
       version: row.version,
@@ -19,6 +19,10 @@ class PrismaTreatmentHistoryRepository extends TreatmentHistoryRepository {
       changeReason: row.change_reason,
       createdAt: row.created_at,
     });
+
+    history.changedByName = row.users?.doctors?.name ?? row.users?.email ?? null;
+
+    return history;
   }
 
   async getLastVersion(treatmentId) {
@@ -62,6 +66,14 @@ class PrismaTreatmentHistoryRepository extends TreatmentHistoryRepository {
       },
       orderBy: {
         version: 'desc',
+      },
+      include: {
+        users: {
+          select: {
+            email: true,
+            doctors: { select: { name: true } },
+          },
+        },
       },
     });
 
