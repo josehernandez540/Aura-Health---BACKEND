@@ -3,6 +3,7 @@ import AuditService from '../../application/services/audit.service.js';
 import AuditRepository from '../../infrastructure/repositories/audit.repository.js';
 import PrismaMedicalRecordRepository from '../../infrastructure/repositories/medicalRecord.repository.js';
 import PrismaPatientRepository from '../../infrastructure/repositories/patient.repository.js';
+import PrismaDoctorRepository from '../../infrastructure/repositories/doctor.repository.js';
 import { withAudit } from '../../shared/utils/audit-wrapper.js';
 import { AuditActions } from '../../domain/constants/audit-actions.js';
 import { successResponse } from '../../shared/utils/apiResponse.js';
@@ -12,6 +13,7 @@ import ValidateMedicalRecordUseCase from '../../application/use-cases/medicalRec
 
 const medicalRecordRepository = new PrismaMedicalRecordRepository();
 const patientRepository = new PrismaPatientRepository();
+const doctorRepository = new PrismaDoctorRepository();
 const auditRepository = new AuditRepository();
 const auditService = new AuditService(auditRepository);
 
@@ -61,13 +63,23 @@ class MedicalRecordController {
 
   async findAll(req, res, next) {
     try {
-      const { page = 1, limit = 20, search, documentType } = req.query;
+      const { page = 1, limit = 20, search, documentType, patientId } = req.query;
+
+      if (patientId && req.user?.role === 'DOCTOR') {
+        const doctor = await doctorRepository.findByUserId(req.user.userId);
+        const assigned = doctor && (await patientRepository.isAssignedToDoctor(patientId, doctor.id));
+
+        if (!assigned) {
+          return successResponse(res, { items: [], total: 0, page: Number(page), limit: Number(limit), totalPages: 0 });
+        }
+      }
 
       const result = await medicalRecordRepository.findAll({
         page: Number(page),
         limit: Math.min(Number(limit), 100),
         search,
         documentType,
+        patientId,
       });
 
       return successResponse(res, result);

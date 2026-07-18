@@ -58,10 +58,11 @@ class PrismaMedicalRecordRepository extends MedicalRecordRepository {
     return row ? mapRow(row) : null;
   }
 
-  async findAll({ page = 1, limit = 20, search, documentType } = {}) {
+  async findAll({ page = 1, limit = 20, search, documentType, patientId } = {}) {
     const skip = (page - 1) * limit;
 
     const where = {
+      ...(patientId && { patient_id: patientId }),
       ...(search && {
         OR: [
           { patients: { name: { contains: search, mode: 'insensitive' } } },
