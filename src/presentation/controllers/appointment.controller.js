@@ -205,10 +205,22 @@ class AppointmentController {
         status,
       } = req.query;
 
+      let scopedDoctorId = doctorId;
+
+      if (req.user?.role === 'DOCTOR') {
+        const doctor = await doctorRepository.findByUserId(req.user.userId);
+
+        if (!doctor) {
+          return successResponse(res, { items: [], total: 0, page: Number(page), limit: Number(limit), totalPages: 0 });
+        }
+
+        scopedDoctorId = doctor.id;
+      }
+
       const result = await appointmentRepository.findAll({
         page: Number(page),
         limit: Math.min(Number(limit), 100),
-        doctorId,
+        doctorId: scopedDoctorId,
         patientId,
         date,
         status,
