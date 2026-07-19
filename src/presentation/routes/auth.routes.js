@@ -1,8 +1,10 @@
 import express from 'express';
 import authController from '../controllers/auth.controller.js';
+import profileController from '../controllers/profile.controller.js';
 import authMiddleware from "../middlewares/auth.middleware.js";
 import { validate } from '../middlewares/validate.middleware.js';
 import { changePasswordSchema } from '../middlewares/schemas/changePassword.schema.js';
+import { updateMyProfileSchema } from '../middlewares/schemas/updateMyProfile.schema.js';
 
 const authRouter = express.Router();
 
@@ -102,6 +104,49 @@ authRouter.patch(
   authMiddleware,
   validate(changePasswordSchema),
   (req, res, next) => authController.changePassword(req, res, next)
+);
+
+/**
+ * @openapi
+ * /v1/auth/me:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Obtener el perfil del usuario autenticado
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil del usuario (nombre, correo, rol y datos de médico si aplica)
+ *   put:
+ *     tags: [Auth]
+ *     summary: Actualizar el perfil propio (nombre y/o correo)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               email: { type: string, format: email }
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado
+ *       409:
+ *         description: El correo ya está en uso por otra cuenta
+ */
+authRouter.get(
+  '/me',
+  authMiddleware,
+  (req, res, next) => profileController.getMe(req, res, next)
+);
+
+authRouter.put(
+  '/me',
+  authMiddleware,
+  validate(updateMyProfileSchema),
+  (req, res, next) => profileController.updateMe(req, res, next)
 );
 
 export default authRouter;
