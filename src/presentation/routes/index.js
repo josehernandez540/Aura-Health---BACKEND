@@ -13,6 +13,8 @@ import treatmentRoute from "./treatment.routes.js";
 import reminderRouter from './reminder.routes.js';
 import reportRoutes from './report.routes.js';
 import notificationRouter from './notification.routes.js';
+import analyticsRoutes from './analytics.routes.js';
+import dashboardRoutes from './dashboard.routes.js';
 
 const router = Router();
 
@@ -36,5 +38,7 @@ router.use('/v1/treatments', authMiddleware, treatmentRoute);
 router.use('/v1/reminders', reminderRouter);
 router.use('/v1/reportes', authMiddleware, reportRoutes);
 router.use('/v1/notifications', notificationRouter);
+router.use('/v1/analytics', authMiddleware, analyticsRoutes);
+router.use('/v1/dashboard', authMiddleware, dashboardRoutes);
 
 export default router;
