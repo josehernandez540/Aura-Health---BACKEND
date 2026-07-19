@@ -11,4 +11,3 @@ jobs:
     steps:
       - name: Ping backend health endpoint
         run: curl --fail --retry 5 --retry-delay 15 --retry-all-errors https://aura-health-backend-gc2l.onrender.com/api/v1/health
-j
