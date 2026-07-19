@@ -13,6 +13,7 @@ import CancelAppointmentUseCase from '../../application/use-cases/appointment/ca
 import RescheduleAppointmentUseCase from '../../application/use-cases/appointment/rescheduleAppointment.usecase.js';
 import emailService from '../../infrastructure/email/email.service.js';
 import MarkAppointmentNoShowUseCase from '../../application/use-cases/appointment/markAppointmentNoShow.usecase.js';
+import CompleteAppointmentUseCase from '../../application/use-cases/appointment/completeAppointment.usecase.js';
 
 const appointmentRepository = new PrismaAppointmentRepository();
 const doctorRepository = new PrismaDoctorRepository();
@@ -36,6 +37,10 @@ const cancelRaw = new CancelAppointmentUseCase(
 );
 
 const noShowRaw = new MarkAppointmentNoShowUseCase(
+  appointmentRepository,
+);
+
+const completeRaw = new CompleteAppointmentUseCase(
   appointmentRepository,
 );
 
@@ -105,6 +110,19 @@ const noShowUseCase = {
     getEntityId: (_r, params) => params.appointmentId,
     getMetadata: (params) => ({
       reason: params.reason ?? null,
+      performedBy: params.performedBy,
+    }),
+  }),
+};
+
+const completeUseCase = {
+  execute: withAudit(completeRaw.execute.bind(completeRaw), auditService, {
+    action: AuditActions.APPOINTMENT_COMPLETED,
+    entityType: 'APPOINTMENT',
+    getUserId: (_r, _p, ctx) => ctx?.user?.userId ?? null,
+    getEntityId: (_r, params) => params.appointmentId,
+    getMetadata: (params) => ({
+      notes: params.notes ?? null,
       performedBy: params.performedBy,
     }),
   }),
@@ -275,6 +293,31 @@ class AppointmentController {
         res,
         result,
         'Cita marcada como no asistida',
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async complete(req, res, next) {
+    try {
+      const { id: appointmentId } = req.params;
+      const { notes } = req.body;
+
+      const performedBy = req.user?.userId ?? null;
+
+      await this._assertCanModify(req, appointmentId);
+
+      const result = await completeUseCase.execute({
+        appointmentId,
+        notes,
+        performedBy,
+      });
+
+      return successResponse(
+        res,
+        result,
+        'Cita marcada como completada',
       );
     } catch (error) {
       next(error);

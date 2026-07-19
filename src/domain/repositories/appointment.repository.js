@@ -23,6 +23,10 @@ class AppointmentRepository {
     throw new Error('Method not implemented');
   }
 
+  async markAsCompleted(id, notes, performedBy) {
+    throw new Error('Method not implemented');
+  }
+
   async findAppointmentsForReminder(startDate, endDate) {
     throw new Error('Method not implemented');
   }

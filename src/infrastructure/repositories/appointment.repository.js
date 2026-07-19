@@ -313,6 +313,49 @@ class PrismaAppointmentRepository extends AppointmentRepository {
     return this._mapRow(row);
   }
 
+  async markAsCompleted(id, notes, performedBy) {
+    const notesValue = notes
+      ? `COMPLETION_NOTES: ${notes}`
+      : null;
+
+    const row = await prisma.appointments.update({
+      where: { id },
+      data: {
+        status: 'COMPLETED',
+        ...(notesValue && { notes: notesValue }),
+      },
+      include: {
+        doctors: {
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+          },
+        },
+        patients: {
+          select: {
+            id: true,
+            name: true,
+            document_number: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    await prisma.appointment_history.create({
+      data: {
+        appointment_id: id,
+        action: notes
+          ? `COMPLETED — ${notes}`
+          : 'COMPLETED',
+        performed_by: performedBy ?? null,
+      },
+    });
+
+    return this._mapRow(row);
+  }
+
   async findAppointmentsForReminder(startWindow, endWindow) {
 
     const startTime =

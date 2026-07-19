@@ -8,6 +8,7 @@ import { updateAppointmentStatusSchema } from '../middlewares/schemas/updateAppo
 import { cancelAppointmentSchema } from '../middlewares/schemas/cancelAppointment.schema.js';
 import { rescheduleAppointmentSchema } from '../middlewares/schemas/rescheduleAppointment.schema.js';
 import { noShowAppointmentSchema } from '../middlewares/schemas/noShowAppointment.schema.js';
+import { completeAppointmentSchema } from '../middlewares/schemas/completeAppointment.schema.js';
 
 const appointmentRouter = express.Router();
 
@@ -390,6 +391,47 @@ appointmentRouter.patch(
   validate(noShowAppointmentSchema),
   (req, res, next) =>
     appointmentController.markNoShow(req, res, next)
+);
+
+/**
+ * @openapi
+ * /v1/appointments/{id}/complete:
+ *   patch:
+ *     tags: [Appointments]
+ *     summary: Marcar una cita como completada (ADMIN o DOCTOR)
+ *     description: >
+ *       Permite marcar como COMPLETED una cita en estado SCHEDULED, con una
+ *       nota de cierre opcional. Un DOCTOR solo puede completar sus propias citas.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string, format: uuid }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               notes:
+ *                 type: string
+ *                 maxLength: 500
+ *     responses:
+ *       200:
+ *         description: Cita marcada como completada
+ *       400:
+ *         description: La cita no está en estado SCHEDULED
+ *       404:
+ *         description: Cita no encontrada
+ */
+appointmentRouter.patch(
+  '/:id/complete',
+  authorizeRoles(Role.ADMIN, Role.DOCTOR),
+  validate(completeAppointmentSchema),
+  (req, res, next) =>
+    appointmentController.complete(req, res, next)
 );
 
 export default appointmentRouter;
