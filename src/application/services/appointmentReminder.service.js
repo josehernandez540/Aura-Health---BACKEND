@@ -23,9 +23,9 @@ class AppointmentReminderService {
   async sendUpcomingReminders() {
     const now = new Date();
 
-    const startWindow = new Date(now.getTime() + 4 * 60 * 1000);
+    const startWindow = now;
 
-    const endWindow = new Date(now.getTime() + 6 * 60 * 1000);
+    const endWindow = new Date(now.getTime() + 60 * 60 * 1000);
 
     const appointments =
       await appointmentRepository.findAppointmentsForReminder(
