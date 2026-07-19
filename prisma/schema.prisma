@@ -208,6 +208,7 @@ model users {
   id                   String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   email                String                @unique
   password             String
+  name                 String?
   role_id              String                @db.Uuid
   is_active            Boolean?              @default(true)
   must_change_password Boolean?              @default(false)
@@ -260,6 +261,7 @@ enum notification_type_enum {
 
 enum report_type_enum {
   CLINICAL
+  CONSOLIDATED
 }
 
 enum risk_level_enum {
