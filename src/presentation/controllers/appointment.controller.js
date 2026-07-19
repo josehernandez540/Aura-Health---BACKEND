@@ -111,6 +111,20 @@ const noShowUseCase = {
 };
 
 class AppointmentController {
+  // A DOCTOR may only modify appointments assigned to them; ADMIN is unrestricted.
+  // Throws NotFoundError (rather than 403) so a doctor can't probe for the
+  // existence of appointments that aren't theirs.
+  async _assertCanModify(req, appointmentId) {
+    if (req.user?.role !== 'DOCTOR') return;
+
+    const doctor = await doctorRepository.findByUserId(req.user.userId);
+    const appointment = doctor && (await appointmentRepository.findById(appointmentId));
+
+    if (!doctor || !appointment || appointment.doctorId !== doctor.id) {
+      throw new NotFoundError(`Cita con id ${appointmentId} no encontrada`);
+    }
+  }
+
   async create(req, res, next) {
     try {
       const createdBy = req.user?.userId ?? null;
@@ -126,6 +140,8 @@ class AppointmentController {
       const { id: appointmentId } = req.params;
       const { status, notes } = req.body;
       const performedBy = req.user?.userId ?? null;
+
+      await this._assertCanModify(req, appointmentId);
 
       const result = await updateStatusUseCase.execute({
         appointmentId,
@@ -145,7 +161,9 @@ class AppointmentController {
       const { id: appointmentId } = req.params;
       const { newDate, newStartTime, newEndTime, reason } = req.body;
       const performedBy = req.user?.userId ?? null;
- 
+
+      await this._assertCanModify(req, appointmentId);
+
       const result = await rescheduleUseCase.execute({
         appointmentId,
         newDate,
@@ -166,6 +184,8 @@ class AppointmentController {
       const { id: appointmentId } = req.params;
       const { reason } = req.body;
       const performedBy = req.user?.userId ?? null;
+
+      await this._assertCanModify(req, appointmentId);
 
       const result = await cancelUseCase.execute({
         appointmentId,
@@ -202,6 +222,8 @@ class AppointmentController {
         doctorId,
         patientId,
         date,
+        dateFrom,
+        dateTo,
         status,
       } = req.query;
 
@@ -219,10 +241,12 @@ class AppointmentController {
 
       const result = await appointmentRepository.findAll({
         page: Number(page),
-        limit: Math.min(Number(limit), 100),
+        limit: Math.min(Number(limit), 300),
         doctorId: scopedDoctorId,
         patientId,
         date,
+        dateFrom,
+        dateTo,
         status,
       });
 
@@ -238,6 +262,8 @@ class AppointmentController {
       const { reason } = req.body;
 
       const performedBy = req.user?.userId ?? null;
+
+      await this._assertCanModify(req, appointmentId);
 
       const result = await noShowUseCase.execute({
         appointmentId,

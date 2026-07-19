@@ -101,13 +101,19 @@ class PrismaTreatmentRepository extends TreatmentRepository {
         return this._mapRow(row);
     }
 
-    async findAll({ page = 1, limit = 20, patientId, doctorId, status } = {}) {
+    async findAll({ page = 1, limit = 20, patientId, doctorId, status, dateFrom, dateTo } = {}) {
         const skip = (page - 1) * limit;
 
         const where = {
             ...(patientId && { patient_id: patientId }),
             ...(doctorId && { doctor_id: doctorId }),
             ...(status && { status }),
+            ...((dateFrom || dateTo) && {
+                created_at: {
+                    ...(dateFrom && { gte: new Date(dateFrom) }),
+                    ...(dateTo && { lte: new Date(dateTo) }),
+                },
+            }),
         };
 
         const [rows, total] = await Promise.all([

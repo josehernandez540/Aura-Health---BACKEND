@@ -1,5 +1,6 @@
 import prisma from '../../config/database.js';
 import UserRepository from '../../domain/repositories/user.repository.js';
+import { ConflictError } from '../../shared/errors/errors.js';
 
 
 class PrismaUserRepository extends UserRepository {
@@ -15,6 +16,31 @@ class PrismaUserRepository extends UserRepository {
       where: { id },
       include: { roles: true },
     });
+  }
+
+  async findByIdWithDoctor(id) {
+    return prisma.users.findUnique({
+      where: { id },
+      include: { roles: true, doctors: true },
+    });
+  }
+
+  async updateProfile(id, { name, email }) {
+    try {
+      return await prisma.users.update({
+        where: { id },
+        data: {
+          ...(name !== undefined && { name }),
+          ...(email !== undefined && { email }),
+          updated_at: new Date(),
+        },
+      });
+    } catch (err) {
+      if (err?.code === 'P2002') {
+        throw new ConflictError('Ese correo ya está en uso por otra cuenta.');
+      }
+      throw err;
+    }
   }
 
   async createWithDoctor({

@@ -228,7 +228,7 @@ appointmentRouter.post(
  */
 appointmentRouter.patch(
   '/:id/cancel',
-  authorizeRoles(Role.ADMIN),
+  authorizeRoles(Role.ADMIN, Role.DOCTOR),
   validate(cancelAppointmentSchema),
   (req, res, next) => appointmentController.cancel(req, res, next)
 );
@@ -336,93 +336,9 @@ appointmentRouter.patch(
  */
 appointmentRouter.patch(
   '/:id/reschedule',
-  authorizeRoles(Role.ADMIN),
+  authorizeRoles(Role.ADMIN, Role.DOCTOR),
   validate(rescheduleAppointmentSchema),
   (req, res, next) => appointmentController.reschedule(req, res, next)
-);
-
-/**
- * @openapi
- * /v1/appointments/{id}/cancel:
- *   patch:
- *     tags: [Appointments]
- *     summary: Cancelar cita con motivo — exclusivo ADMIN (REQ-06)
- *     description: >
- *       Permite a un Administrador cancelar una cita en estado SCHEDULED.
- *       El motivo de cancelación es **obligatorio**. Se notifica automáticamente
- *       al paciente por email y se registra la operación en el log de auditoría
- *       con la acción `APPOINTMENT_CANCELLED_BY_ADMIN`.
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: UUID de la cita a cancelar
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [reason]
- *             properties:
- *               reason:
- *                 type: string
- *                 minLength: 10
- *                 maxLength: 500
- *                 example: "El médico tuvo una emergencia y no podrá atender ese día."
- *     responses:
- *       200:
- *         description: Cita cancelada correctamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:   { type: boolean, example: true }
- *                 message:   { type: string,  example: "Cita cancelada correctamente" }
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:         { type: string, format: uuid }
- *                     status:     { type: string, example: "CANCELLED" }
- *                     reason:     { type: string }
- *                     cancelledBy: { type: string, format: uuid }
- *                     cancelledAt: { type: string, format: date-time }
- *       400:
- *         description: Motivo faltante / cita no está en estado SCHEDULED
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       401:
- *         description: No autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       403:
- *         description: Rol insuficiente (solo ADMIN)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
- *         description: Cita no encontrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-appointmentRouter.patch(
-  '/:id/cancel',
-  authorizeRoles(Role.ADMIN),
-  validate(cancelAppointmentSchema),
-  (req, res, next) => appointmentController.cancel(req, res, next)
 );
 
 /**
@@ -463,14 +379,14 @@ appointmentRouter.patch(
  */
 appointmentRouter.patch(
   '/:id/status',
-  authorizeRoles(Role.ADMIN),
+  authorizeRoles(Role.ADMIN, Role.DOCTOR),
   validate(updateAppointmentStatusSchema),
   (req, res, next) => appointmentController.updateStatus(req, res, next)
 );
 
 appointmentRouter.patch(
   '/:id/no-show',
-  authorizeRoles(Role.ADMIN),
+  authorizeRoles(Role.ADMIN, Role.DOCTOR),
   validate(noShowAppointmentSchema),
   (req, res, next) =>
     appointmentController.markNoShow(req, res, next)

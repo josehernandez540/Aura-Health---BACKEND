@@ -14,6 +14,14 @@ class UserRepository {
   async updatePassword(userId, newPassword) {
     throw new Error('Method not implemented');
   }
+
+  async findByIdWithDoctor(id) {
+    throw new Error('Method not implemented');
+  }
+
+  async updateProfile(id, data) {
+    throw new Error('Method not implemented');
+  }
 }
 
 export default UserRepository;

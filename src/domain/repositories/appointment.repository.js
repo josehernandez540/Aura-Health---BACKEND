@@ -26,6 +26,10 @@ class AppointmentRepository {
   async findAppointmentsForReminder(startDate, endDate) {
     throw new Error('Method not implemented');
   }
+
+  async countDistinctPatients(options = {}) {
+    throw new Error('Method not implemented');
+  }
 }
 
 export default AppointmentRepository;

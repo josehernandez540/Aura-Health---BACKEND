@@ -103,11 +103,13 @@ model notifications {
   entity_type String?
   entity_id   String?                   @db.Uuid
   sent_at     DateTime?                 @db.Timestamp(6)
+  read_at     DateTime?                 @db.Timestamp(6)
   created_at  DateTime?                 @default(now()) @db.Timestamp(6)
   updated_at  DateTime?                 @default(now()) @db.Timestamp(6)
   users       users                     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([entity_type, entity_id])
+  @@index([user_id, created_at])
 }
 
 model patients {
@@ -206,6 +208,7 @@ model users {
   id                   String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   email                String                @unique
   password             String
+  name                 String?
   role_id              String                @db.Uuid
   is_active            Boolean?              @default(true)
   must_change_password Boolean?              @default(false)
@@ -258,6 +261,7 @@ enum notification_type_enum {
 
 enum report_type_enum {
   CLINICAL
+  CONSOLIDATED
 }
 
 enum risk_level_enum {
