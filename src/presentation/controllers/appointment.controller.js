@@ -222,6 +222,8 @@ class AppointmentController {
         doctorId,
         patientId,
         date,
+        dateFrom,
+        dateTo,
         status,
       } = req.query;
 
@@ -239,10 +241,12 @@ class AppointmentController {
 
       const result = await appointmentRepository.findAll({
         page: Number(page),
-        limit: Math.min(Number(limit), 100),
+        limit: Math.min(Number(limit), 300),
         doctorId: scopedDoctorId,
         patientId,
         date,
+        dateFrom,
+        dateTo,
         status,
       });
 
