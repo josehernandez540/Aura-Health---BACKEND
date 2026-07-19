@@ -48,7 +48,7 @@ class PrismaAppointmentRepository extends AppointmentRepository {
     return this._mapRow(row);
   }
 
-  async findAll({ page = 1, limit = 20, doctorId, patientId, date, status } = {}) {
+  async findAll({ page = 1, limit = 20, doctorId, patientId, date, dateFrom, dateTo, status } = {}) {
     const skip = (page - 1) * limit;
 
     const where = {
@@ -56,6 +56,12 @@ class PrismaAppointmentRepository extends AppointmentRepository {
       ...(patientId && { patient_id: patientId }),
       ...(status && { status }),
       ...(date && { date: new Date(date) }),
+      ...(!date && (dateFrom || dateTo) && {
+        date: {
+          ...(dateFrom && { gte: new Date(dateFrom) }),
+          ...(dateTo && { lte: new Date(dateTo) }),
+        },
+      }),
     };
 
     const [rows, total] = await Promise.all([
@@ -79,6 +85,27 @@ class PrismaAppointmentRepository extends AppointmentRepository {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  async countDistinctPatients({ doctorId, patientId, dateFrom, dateTo } = {}) {
+    const where = {
+      ...(doctorId && { doctor_id: doctorId }),
+      ...(patientId && { patient_id: patientId }),
+      ...((dateFrom || dateTo) && {
+        date: {
+          ...(dateFrom && { gte: new Date(dateFrom) }),
+          ...(dateTo && { lte: new Date(dateTo) }),
+        },
+      }),
+    };
+
+    const rows = await prisma.appointments.findMany({
+      where,
+      distinct: ['patient_id'],
+      select: { patient_id: true },
+    });
+
+    return rows.length;
   }
 
   async findConflict({ doctorId, date, startTime, endTime, excludeId = null }) {

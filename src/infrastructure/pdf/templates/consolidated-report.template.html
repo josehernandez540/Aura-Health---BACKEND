@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+
+  <style>
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #374151;
+      padding: 40px;
+    }
+
+    .header {
+      background: #2563eb;
+      color: white;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 32px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      opacity: 0.9;
+    }
+
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      color: #111827;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 8px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: #f9fafb;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #6b7280;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-size: 15px;
+      color: #111827;
+      font-weight: 500;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .metric-card {
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: #2563eb;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table th,
+    .data-table td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .data-table th {
+      background: #f9fafb;
+      color: #6b7280;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="header">
+    <h1 class="title">
+      Aura Health
+    </h1>
+
+    <div class="subtitle">
+      Reporte Consolidado — Generado el {{generatedAt}}
+    </div>
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Filtros aplicados
+    </div>
+
+    <div class="info-grid">
+
+      <div class="card">
+        <div class="label">Médico</div>
+        <div class="value">{{doctorLabel}}</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Paciente</div>
+        <div class="value">{{patientLabel}}</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Rango de fechas</div>
+        <div class="value">{{dateRangeLabel}}</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Métricas principales
+    </div>
+
+    <div class="metrics-grid">
+      {{metricCards}}
+    </div>
+
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Citas
+    </div>
+
+    {{appointmentsTable}}
+
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Tratamientos
+    </div>
+
+    {{treatmentsTable}}
+
+  </div>
+
+  <div class="footer">
+    © 2026 Aura Health — Transformando la gestión médica.
+  </div>
+
+</body>
+</html>
