@@ -16,7 +16,7 @@ export const createAppointmentSchema = z
       .string({ required_error: 'La fecha es requerida' })
       .refine((v) => !Number.isNaN(Date.parse(v)), 'La fecha no es válida (use YYYY-MM-DD)')
       .refine((v) => {
-        const d = new Date(v);
+        const d = new Date(`${v}T00:00:00`);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         return d >= today;
